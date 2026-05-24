@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.image.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+
+<!--
+    main.fxml - Diálogo principal de captura
+    Controller: com.screenshottool.controller.ScreenshotController
+
+    Layout:
+      ┌─────────────────────────────────────┐
+      │  lblDimensiones (info + portapapeles)│
+      ├─────────────────────────────────────┤
+      │  imgPreview (preview de la captura) │
+      ├─────────────────────────────────────┤
+      │  Nombre: [txtNombre] Formato:[combo]│
+      │  Guardar en: [lblCarpeta] [Cambiar] │
+      │  lblEstado                          │
+      ├─────────────────────────────────────┤
+      │  [Guardar]  [Copiar]  [Cancelar]    │
+      └─────────────────────────────────────┘
+-->
+
+<VBox xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="com.screenshottool.controller.ScreenshotController"
+      spacing="0"
+      styleClass="root-container"
+      stylesheets="@../css/style.css">
+
+    <!-- ── Info: dimensiones + portapapeles ────────────── -->
+    <Label fx:id="lblDimensiones"
+           styleClass="lbl-info"
+           maxWidth="Infinity"
+           alignment="CENTER">
+        <VBox.margin><Insets top="12" bottom="4"/></VBox.margin>
+    </Label>
+
+    <!-- ── Preview ─────────────────────────────────────── -->
+    <StackPane styleClass="preview-container">
+        <VBox.margin><Insets top="8" left="16" right="16" bottom="8"/></VBox.margin>
+        <ImageView fx:id="imgPreview"
+                   fitWidth="500" fitHeight="260"
+                   preserveRatio="true"
+                   styleClass="preview-image"/>
+    </StackPane>
+
+    <!-- ── Nombre + Formato ─────────────────────────────── -->
+    <HBox spacing="8" alignment="CENTER_LEFT">
+        <VBox.margin><Insets top="4" left="16" right="16"/></VBox.margin>
+        <Label text="Nombre:" styleClass="lbl-campo"/>
+        <TextField fx:id="txtNombre"
+                   styleClass="txt-nombre"
+                   HBox.hgrow="ALWAYS"/>
+        <Label text="Formato:" styleClass="lbl-campo"/>
+        <ComboBox fx:id="cmbFormato"
+                  styleClass="cmb-formato"
+                  prefWidth="80"/>
+    </HBox>
+
+    <!-- ── Carpeta destino ──────────────────────────────── -->
+    <HBox spacing="8" alignment="CENTER_LEFT">
+        <VBox.margin><Insets top="6" left="16" right="16"/></VBox.margin>
+        <Label text="Guardar en:" styleClass="lbl-campo"/>
+        <Label fx:id="lblCarpeta"
+               styleClass="lbl-carpeta"
+               HBox.hgrow="ALWAYS"
+               maxWidth="Infinity"/>
+        <Button text="Cambiar..."
+                styleClass="btn-cambiar"
+                onAction="#onCambiarCarpeta"/>
+    </HBox>
+
+    <!-- ── Estado / feedback ────────────────────────────── -->
+    <Label fx:id="lblEstado"
+           styleClass="lbl-estado"
+           maxWidth="Infinity"
+           alignment="CENTER_LEFT">
+        <VBox.margin><Insets top="4" left="16" right="16"/></VBox.margin>
+    </Label>
+
+    <!-- ── Separador ────────────────────────────────────── -->
+    <Separator>
+        <VBox.margin><Insets top="8"/></VBox.margin>
+    </Separator>
+
+    <!-- ── Botones ──────────────────────────────────────── -->
+    <HBox spacing="10" alignment="CENTER">
+        <VBox.margin><Insets top="10" bottom="14"/></VBox.margin>
+
+        <Button fx:id="btnGuardar"
+                text="💾  Guardar"
+                styleClass="btn-guardar"
+                defaultButton="true"
+                onAction="#onGuardar"
+                prefWidth="120"/>
+
+        <Button fx:id="btnCopiar"
+                text="📋  Copiar"
+                styleClass="btn-copiar"
+                onAction="#onCopiar"
+                prefWidth="120"/>
+
+        <Button fx:id="btnCancelar"
+                text="↩  Cancelar"
+                styleClass="btn-cancelar"
+                cancelButton="true"
+                onAction="#onCancelar"
+                prefWidth="120"/>
+    </HBox>
+
+</VBox>

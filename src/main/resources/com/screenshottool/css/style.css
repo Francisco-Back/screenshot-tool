@@ -1,0 +1,180 @@
+/*
+ * style.css - Screenshot Tool
+ * Usa variables de JavaFX para adaptarse automáticamente
+ * al tema claro/oscuro del sistema operativo.
+ * Sin colores hardcodeados excepto los botones de acción
+ * (Guardar=verde, Copiar=azul) que son intencionales.
+ */
+
+/* ── Contenedor raíz ─────────────────────────────────── */
+.root-container {
+    -fx-background-color: -fx-background;
+}
+
+/* ── Info de dimensiones ─────────────────────────────── */
+.lbl-info {
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -fx-accent;
+    -fx-padding: 4 16 4 16;
+}
+
+/* ── Preview ─────────────────────────────────────────── */
+.preview-container {
+    -fx-background-color: derive(-fx-background, -8%);
+    -fx-border-color: derive(-fx-background, -20%);
+    -fx-border-width: 1;
+    -fx-border-radius: 4;
+    -fx-background-radius: 4;
+    -fx-padding: 4;
+}
+
+/* ── Labels de campo ─────────────────────────────────── */
+.lbl-campo {
+    -fx-font-size: 12px;
+    -fx-text-fill: -fx-text-base-color;
+}
+
+/* ── TextField nombre ────────────────────────────────── */
+.txt-nombre {
+    -fx-font-family: monospace;
+    -fx-font-size: 12px;
+}
+
+/* ── ComboBox formato ────────────────────────────────── */
+.cmb-formato {
+    -fx-font-family: monospace;
+    -fx-font-size: 12px;
+}
+
+/* ── Label carpeta ───────────────────────────────────── */
+.lbl-carpeta {
+    -fx-font-family: monospace;
+    -fx-font-size: 11px;
+    -fx-text-fill: derive(-fx-text-base-color, 20%);
+}
+
+/* ── Label estado ────────────────────────────────────── */
+.lbl-estado {
+    -fx-font-size: 11px;
+    -fx-font-style: italic;
+}
+
+/* ── Botón Guardar (verde intencional) ───────────────── */
+.btn-guardar {
+    -fx-background-color: #3cb371;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-font-size: 12px;
+    -fx-background-radius: 6;
+    -fx-cursor: hand;
+}
+.btn-guardar:hover {
+    -fx-background-color: derive(#3cb371, -10%);
+}
+.btn-guardar:disabled {
+    -fx-opacity: 0.5;
+}
+
+/* ── Botón Copiar (azul intencional) ─────────────────── */
+.btn-copiar {
+    -fx-background-color: #1e90ff;
+    -fx-text-fill: white;
+    -fx-font-size: 12px;
+    -fx-background-radius: 6;
+    -fx-cursor: hand;
+}
+.btn-copiar:hover {
+    -fx-background-color: derive(#1e90ff, -10%);
+}
+
+/* ── Botón Cancelar (neutro, sigue el tema) ──────────── */
+.btn-cancelar {
+    -fx-background-color: derive(-fx-background, -15%);
+    -fx-text-fill: -fx-text-base-color;
+    -fx-font-size: 12px;
+    -fx-background-radius: 6;
+    -fx-cursor: hand;
+}
+.btn-cancelar:hover {
+    -fx-background-color: derive(-fx-background, -25%);
+}
+
+/* ── Botón Cambiar carpeta (neutro, sigue el tema) ───── */
+.btn-cambiar {
+    -fx-font-size: 11px;
+    -fx-background-radius: 4;
+    -fx-cursor: hand;
+}
+
+/* ── Botón Examinar (neutro, sigue el tema) ──────────── */
+.btn-examinar {
+    -fx-font-size: 12px;
+    -fx-background-radius: 6;
+    -fx-cursor: hand;
+}
+
+/* ── folder-picker: título ───────────────────────────── */
+.picker-titulo {
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -fx-text-base-color;
+}
+
+/* ── folder-picker: contenedor de ruta ───────────────── */
+.picker-ruta-container {
+    -fx-background-color: derive(-fx-background, -8%);
+    -fx-border-color: derive(-fx-background, -20%);
+    -fx-border-width: 1;
+    -fx-border-radius: 4;
+    -fx-background-radius: 4;
+    -fx-padding: 8;
+}
+
+/* ── folder-picker: texto de ruta ────────────────────── */
+.picker-ruta {
+    -fx-font-family: monospace;
+    -fx-font-size: 12px;
+    -fx-text-fill: derive(-fx-text-base-color, 10%);
+}
+
+/* ── Toast de confirmación (sigue el tema) ───────────── */
+.toast-container {
+    -fx-background-color: derive(-fx-background, -12%);
+    -fx-border-color: derive(-fx-background, -25%);
+    -fx-border-width: 1;
+    -fx-background-radius: 8;
+    -fx-border-radius: 8;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.3), 10, 0, 0, 4);
+}
+
+.toast-label {
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -fx-text-base-color;
+    -fx-padding: 10 16 6 16;
+}
+
+/* ── Botón abrir archivo en toast (azul intencional) ─── */
+.btn-abrir {
+    -fx-background-color: #1e90ff;
+    -fx-text-fill: white;
+    -fx-font-size: 11px;
+    -fx-background-radius: 4;
+    -fx-cursor: hand;
+}
+.btn-abrir:hover {
+    -fx-background-color: derive(#1e90ff, -10%);
+}
+
+/* ── Botón cerrar toast (neutro) ─────────────────────── */
+.btn-toast-cerrar {
+    -fx-background-color: derive(-fx-background, -20%);
+    -fx-text-fill: -fx-text-base-color;
+    -fx-font-size: 11px;
+    -fx-background-radius: 4;
+    -fx-cursor: hand;
+}
+.btn-toast-cerrar:hover {
+    -fx-background-color: derive(-fx-background, -30%);
+}

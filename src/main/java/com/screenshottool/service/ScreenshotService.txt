@@ -1,0 +1,293 @@
+package com.screenshottool.service;
+
+import com.screenshottool.model.CapturaModel;
+import javafx.embed.swing.SwingFXUtils;
+import javafx.scene.image.Image;
+
+import javax.imageio.ImageIO;
+import java.awt.*;
+import java.awt.datatransfer.*;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+
+/**
+ * ScreenshotService - Toda la lógica de negocio.
+ *
+ * Jerarquía de backends para captura (de mejor a peor):
+ * 1. gnome-screenshot → funciona en GNOME/Wayland/VirtualBox
+ * 2. scrot → funciona en X11/VirtualBox
+ * 3. import → ImageMagick, alternativa X11
+ * 4. java.awt.Robot → fallback final (solo máquina real)
+ *
+ * La selección del área la hace cada herramienta con su propio
+ * selector nativo (-s en scrot, --area en gnome-screenshot).
+ * Robot es el único que usa el SelectorDeArea de Java.
+ */
+public class ScreenshotService {
+
+    // Archivo temporal compartido entre backends
+    private static final File TMP_FILE = new File(System.getProperty("java.io.tmpdir"), "screenshottool_tmp.png");
+
+    // Backend detectado al iniciar (se cachea para no re-detectar)
+    private final Backend backendActivo;
+
+    public enum Backend {
+        GNOME_SCREENSHOT,
+        SCROT,
+        IMPORT_IMAGEMAGICK,
+        ROBOT
+    }
+
+    public ScreenshotService() {
+        this.backendActivo = detectarBackend();
+        System.out.println("[ScreenshotService] Backend activo: " + backendActivo);
+    }
+
+    // ── Detección de backend ──────────────────────────────
+    private Backend detectarBackend() {
+        if (comandoDisponible("gnome-screenshot"))
+            return Backend.GNOME_SCREENSHOT;
+        if (comandoDisponible("scrot"))
+            return Backend.SCROT;
+        if (comandoDisponible("import"))
+            return Backend.IMPORT_IMAGEMAGICK;
+        return Backend.ROBOT;
+    }
+
+    private boolean comandoDisponible(String cmd) {
+        try {
+            Process p = new ProcessBuilder("which", cmd)
+                    .redirectErrorStream(true)
+                    .start();
+            return p.waitFor() == 0;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    public Backend getBackendActivo() {
+        return backendActivo;
+    }
+
+    // ── Captura con selección de área ────────────────────
+    /**
+     * Lanza el selector nativo y retorna la imagen capturada.
+     * Retorna null si el usuario canceló.
+     */
+    public BufferedImage capturarConSeleccion() throws Exception {
+        return switch (backendActivo) {
+            case GNOME_SCREENSHOT -> capturarConGnome();
+            case SCROT -> capturarConScrot();
+            case IMPORT_IMAGEMAGICK -> capturarConImport();
+            case ROBOT -> capturarConRobot();
+        };
+    }
+
+    // ── Backend 1: gnome-screenshot ───────────────────────
+    private BufferedImage capturarConGnome() throws Exception {
+        // --area = modo selección interactiva
+        // --file = guardar en tmp en lugar de abrir el diálogo propio
+        Process p = new ProcessBuilder(
+                "gnome-screenshot", "--area", "--file=" + TMP_FILE.getAbsolutePath())
+                .inheritIO()
+                .start();
+        int exitCode = p.waitFor();
+        if (exitCode != 0 || !TMP_FILE.exists())
+            return null; // usuario canceló
+        BufferedImage img = ImageIO.read(TMP_FILE);
+        TMP_FILE.delete();
+        return img;
+    }
+
+    // ── Backend 2: scrot ──────────────────────────────────
+    private BufferedImage capturarConScrot() throws Exception {
+        // -s = modo selección con mouse
+        // --line mode=edge = resalta bordes al seleccionar
+        Process p = new ProcessBuilder(
+                "scrot", "-s", "--line", "mode=edge", TMP_FILE.getAbsolutePath())
+                .inheritIO()
+                .start();
+        int exitCode = p.waitFor();
+        if (exitCode != 0 || !TMP_FILE.exists())
+            return null;
+        BufferedImage img = ImageIO.read(TMP_FILE);
+        TMP_FILE.delete();
+        return img;
+    }
+
+    // ── Backend 3: import (ImageMagick) ──────────────────
+    private BufferedImage capturarConImport() throws Exception {
+        // import sin argumentos abre selector de área nativo
+        Process p = new ProcessBuilder("import", TMP_FILE.getAbsolutePath())
+                .inheritIO()
+                .start();
+        int exitCode = p.waitFor();
+        if (exitCode != 0 || !TMP_FILE.exists())
+            return null;
+        BufferedImage img = ImageIO.read(TMP_FILE);
+        TMP_FILE.delete();
+        return img;
+    }
+
+    // ── Backend 4: Robot (fallback) ───────────────────────
+    /**
+     * Con Robot no hay selector nativo, así que se devuelve null
+     * y el caller debe usar el SelectorDeArea de Java.
+     * Este método se llama tras obtener las coordenadas del selector.
+     */
+    private BufferedImage capturarConRobot() throws Exception {
+        // Señal para que el caller use el SelectorDeArea
+        return null;
+    }
+
+    /**
+     * Captura un área específica con Robot (solo cuando backend == ROBOT).
+     * Las coordenadas vienen del SelectorDeArea de Java.
+     */
+    public BufferedImage capturarAreaConRobot(Rectangle area) throws Exception {
+        Robot robot = new Robot();
+        Thread.sleep(300);
+        robot.waitForIdle();
+
+        // Detectar escala HiDPI de la pantalla
+        GraphicsDevice gd = GraphicsEnvironment
+                .getLocalGraphicsEnvironment()
+                .getDefaultScreenDevice();
+        double scaleX = gd.getDefaultConfiguration()
+                .getDefaultTransform().getScaleX();
+        double scaleY = gd.getDefaultConfiguration()
+                .getDefaultTransform().getScaleY();
+
+        // Capturar en coordenadas físicas reales
+        Rectangle areaFisica = new Rectangle(
+                (int) (area.x * scaleX),
+                (int) (area.y * scaleY),
+                (int) (area.width * scaleX),
+                (int) (area.height * scaleY));
+
+        return robot.createScreenCapture(areaFisica);
+    }
+
+    // ── Conversión BufferedImage → JavaFX Image ───────────
+    public Image toFXImage(BufferedImage bi) {
+        return SwingFXUtils.toFXImage(bi, null);
+    }
+
+    // ── Portapapeles ──────────────────────────────────────
+    // public void copiarAlPortapapeles(BufferedImage imagen) {
+    // * Toolkit.getDefaultToolkit().getSystemClipboard()
+    // * .setContents(new TransferableImage(imagen), null);
+    // * }
+    //
+    public void copiarAlPortapapeles(BufferedImage imagen) {
+        TransferableImage transferable = new TransferableImage(imagen);
+        // Reintentar hasta 5 veces con pausa entre intentos
+        for (int i = 0; i < 5; i++) {
+            try {
+                Toolkit.getDefaultToolkit().getSystemClipboard()
+                        .setContents(transferable, null);
+                return; // éxito
+            } catch (IllegalStateException e) {
+                try {
+                    Thread.sleep(100);
+                } catch (InterruptedException ignored) {
+                }
+            }
+        }
+        System.err.println("[WARN] No se pudo copiar al portapapeles");
+    }
+
+    // ── Guardar archivo ───────────────────────────────────
+    /**
+     * Guarda la imagen del modelo en disco.
+     * Retorna el archivo guardado o lanza excepción.
+     */
+    public File guardarImagen(BufferedImage imagen, CapturaModel modelo) throws IOException {
+        File archivo = modelo.getArchivoDestino();
+        String formato = modelo.getFormato();
+
+        // Crear carpeta si no existe
+        Files.createDirectories(archivo.getParentFile().toPath());
+
+        // JPG no admite canal alfa: convertir ARGB → RGB
+        BufferedImage imgAGuardar = imagen;
+        if ("jpg".equals(formato)) {
+            imgAGuardar = new BufferedImage(
+                    imagen.getWidth(), imagen.getHeight(), BufferedImage.TYPE_INT_RGB);
+            java.awt.Graphics2D g2 = imgAGuardar.createGraphics();
+            g2.setColor(java.awt.Color.WHITE);
+            g2.fillRect(0, 0, imagen.getWidth(), imagen.getHeight());
+            g2.drawImage(imagen, 0, 0, null);
+            g2.dispose();
+        }
+
+        boolean ok = ImageIO.write(imgAGuardar, formato, archivo);
+        if (!ok)
+            throw new IOException("Formato '" + formato + "' no soportado.");
+        return archivo;
+    }
+
+    // ── Abrir archivo con visor del sistema ──────────────
+    public void abrirArchivo(File archivo) {
+        try {
+            if (Desktop.isDesktopSupported()
+                    && Desktop.getDesktop().isSupported(Desktop.Action.OPEN)) {
+                Desktop.getDesktop().open(archivo);
+            } else {
+                new ProcessBuilder("xdg-open", archivo.getAbsolutePath()).start();
+            }
+        } catch (IOException e) {
+            System.err.println("No se pudo abrir el archivo: " + e.getMessage());
+        }
+    }
+
+    // ── Verificar si imagen parece negra (VirtualBox) ────
+    /**
+     * Muestrea píxeles aleatorios. Si todos son muy oscuros,
+     * la captura falló (framebuffer vacío en VirtualBox).
+     */
+    public boolean imagenPareceBlancoNegro(BufferedImage img) {
+        int muestras = 20;
+        int oscuros = 0;
+        int w = img.getWidth(), h = img.getHeight();
+        for (int i = 0; i < muestras; i++) {
+            int x = (int) (Math.random() * w);
+            int y = (int) (Math.random() * h);
+            int rgb = img.getRGB(x, y);
+            int r = (rgb >> 16) & 0xFF;
+            int g = (rgb >> 8) & 0xFF;
+            int b = rgb & 0xFF;
+            if (r < 10 && g < 10 && b < 10)
+                oscuros++;
+        }
+        return oscuros > muestras * 0.9; // >90% píxeles negros
+    }
+
+    // ── Transferable interno ──────────────────────────────
+    private static class TransferableImage implements Transferable {
+        private final java.awt.Image imagen;
+
+        TransferableImage(java.awt.Image img) {
+            this.imagen = img;
+        }
+
+        @Override
+        public DataFlavor[] getTransferDataFlavors() {
+            return new DataFlavor[] { DataFlavor.imageFlavor };
+        }
+
+        @Override
+        public boolean isDataFlavorSupported(DataFlavor f) {
+            return DataFlavor.imageFlavor.equals(f);
+        }
+
+        @Override
+        public Object getTransferData(DataFlavor f) throws UnsupportedFlavorException {
+            if (!isDataFlavorSupported(f))
+                throw new UnsupportedFlavorException(f);
+            return imagen;
+        }
+    }
+}

@@ -1,0 +1,14 @@
+/target/
+dependency-reduced-pom.xml
+dependency-reduced-pom.xml
+cat > .gitignore << 'EOF'
+target/
+*.class
+*.jar
+.classpath
+.project
+.settings/
+.vscode/
+*.log
+/tmp/
+EOF
