@@ -292,27 +292,35 @@ public class ScreenshotController implements Initializable {
         toast.setY(bounds.getMinY() + (bounds.getHeight() - toast.getHeight()) / 2);
 
         // Flag para evitar doble cierre
-        final boolean[] cerrado = { false };
+final boolean[] cerrado = { false };
 
-        javafx.animation.PauseTransition pause = new javafx.animation.PauseTransition(javafx.util.Duration.seconds(4));
-        pause.setOnFinished(e -> {
-            if (!cerrado[0]) {
-                cerrado[0] = true;
-                if (toast.isShowing())
-                    toast.close();
-                if (stage.isShowing())
-                    stage.close();
-            }
+javafx.animation.PauseTransition pause = 
+    new javafx.animation.PauseTransition(javafx.util.Duration.seconds(4));
+pause.setOnFinished(e -> {
+    if (!cerrado[0]) {
+        cerrado[0] = true;
+        Platform.runLater(() -> {
+            if (toast.isShowing()) toast.close();
+            if (stage.isShowing()) stage.close();
         });
-        pause.play();
+    }
+});
+pause.play();
 
-        toast.setOnHidden(e -> {
-            if (!cerrado[0]) {
-                cerrado[0] = true;
-                pause.stop();
-                if (stage.isShowing())
-                    stage.close();
-            }
+toast.setOnHidden(e -> {
+    if (!cerrado[0]) {
+        cerrado[0] = true;
+        pause.stop();
+        // Pequeño delay para que GTK termine de procesar el cierre del toast
+        Platform.runLater(() -> {
+            new Thread(() -> {
+                try { Thread.sleep(100); } catch (InterruptedException ignored) {}
+                Platform.runLater(() -> {
+                    if (stage.isShowing()) stage.close();
+                });
+            }).start();
         });
+    }
+});
     }
 }
