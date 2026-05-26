@@ -166,10 +166,20 @@ public class AppContext {
 
             dialogoActual = stage;
             stage.show();
-            stage.centerOnScreen();
+            //stage.centerOnScreen();
 
             // Limpiar dialogoActual al cerrar con el botón X
-            stage.setOnCloseRequest(e -> dialogoActual = null);
+            stage.setOnCloseRequest(e -> {
+                dialogoActual = null;
+                // Notificar al HotkeyManager para recuperar el foco
+                hotkeyManager.recuperarFoco();
+            });
+
+            // También al cerrar normalmente via código
+            stage.setOnHidden(e -> {
+                dialogoActual = null;
+                hotkeyManager.recuperarFoco();
+            });
 
         } catch (IOException e) {
             e.printStackTrace();
@@ -247,4 +257,6 @@ public class AppContext {
         }
         alert.show();
     }
+
+
 }

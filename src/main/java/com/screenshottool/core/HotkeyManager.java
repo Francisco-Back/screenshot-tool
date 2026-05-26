@@ -17,6 +17,7 @@ import java.awt.event.KeyEvent;
 public class HotkeyManager {
 
     private final Runnable onCapturar;
+    private javax.swing.JFrame ventanaOculta;
 
     public HotkeyManager(Runnable onCapturar) {
         this.onCapturar = onCapturar;
@@ -26,16 +27,13 @@ public class HotkeyManager {
     public void iniciar() {
         String os = System.getProperty("os.name").toLowerCase();
         if (os.contains("linux")) {
-            // En Linux el atajo lo maneja GNOME via gsettings
-            // El instalador configuró: touch /tmp/screenshottool.trigger
-            // AppContext.iniciarMonitorTrigger() lo detecta y dispara la captura
             System.out.println("[HotkeyManager] Linux: hotkey managed by GNOME gsettings");
             return;
         }
 
         // Windows: registrar atajo via ventana oculta
         javax.swing.SwingUtilities.invokeLater(() -> {
-            javax.swing.JFrame ventanaOculta = crearVentanaOculta();
+            ventanaOculta = crearVentanaOculta(); // ← ahora asigna al campo
             registrarAtajo(ventanaOculta);
             iniciarTimerFoco(ventanaOculta);
         });
@@ -77,12 +75,27 @@ public class HotkeyManager {
         javax.swing.Timer timer = new javax.swing.Timer(800, e -> {
             Window focusedWindow = KeyboardFocusManager
                     .getCurrentKeyboardFocusManager().getFocusedWindow();
-            // Si no hay ninguna ventana con foco, tomar foco para recibir el atajo
-            if (focusedWindow == null) {
+            // No robar foco si hay una ventana JavaFX activa
+            if (focusedWindow == null && !hayDialogoActivo()) {
                 frame.toFront();
                 frame.requestFocus();
             }
         });
         timer.start();
+    }
+
+    private boolean hayDialogoActivo() {
+        return javafx.stage.Window.getWindows().stream()
+                .anyMatch(w -> w.isShowing() && w instanceof javafx.stage.Stage);
+    }
+
+    public void recuperarFoco() {
+        String os = System.getProperty("os.name").toLowerCase();
+        if (os.contains("win") && ventanaOculta != null) {
+            javax.swing.SwingUtilities.invokeLater(() -> {
+                ventanaOculta.toFront();
+                ventanaOculta.requestFocus();
+            });
+        }
     }
 }
