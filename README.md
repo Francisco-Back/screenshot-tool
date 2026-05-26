@@ -13,7 +13,7 @@ A lightweight screen capture tool for Linux and Windows built with Java 21 and J
 ## Features
 
 - **System tray** integration — runs silently in the background
-- **Global hotkey** `Ctrl+Alt+S` to trigger capture
+- **Global hotkey** `Ctrl+Alt+S` to trigger capture (configurable on Windows)
 - **Area selection** with visual overlay, blue border, corner markers and ✕ cancel button
 - **Multi-monitor** support — covers all screens simultaneously with screen labels
 - **Native capture backends** with automatic fallback:
@@ -45,12 +45,13 @@ A lightweight screen capture tool for Linux and Windows built with Java 21 and J
 | Dark/light theme | ✅ | ✅ |
 | System tray | ✅ | ✅ |
 | HiDPI capture | ✅ | ✅ |
-| `Ctrl+Alt+S` hotkey | ✅ GNOME | ✅ |
+| Global hotkey | ✅ GNOME gsettings | ✅ Windows shortcut |
+| Custom hotkey | ✅ | ✅ |
 | `gnome-screenshot` backend | ✅ | ❌ |
 | `scrot` / `xwd` backend | ✅ | ❌ |
 | `Robot` backend | ✅ | ✅ |
-| `screenshot` command | ✅ | ❌ |
-| Installer script | ✅ | ❌ |
+| `screenshot` command | ✅ | ✅ |
+| Installer script | ✅ `.sh` | ✅ `.bat` |
 
 ---
 
@@ -66,7 +67,7 @@ A lightweight screen capture tool for Linux and Windows built with Java 21 and J
 
 ```bash
 git clone https://github.com/Francisco-Back/screenshot-tool.git
-cd screenshot-tool
+cd screenshot-tool/installers/linux
 bash instalar.sh
 ```
 
@@ -83,35 +84,51 @@ The installer automatically:
 ## Uninstall (Linux)
 
 ```bash
-bash uninstall.sh
+bash installers/linux/uninstall.sh
 ```
 
 ---
 
-## Usage (Windows)
+## Installation (Windows)
 
-```bash
-# Run directly
-mvn javafx:run
+```batch
+cd installers\windows
+instalar.bat
+```
 
-# Or build and run JAR
-mvn clean package
-java -jar target/screenshot-tool.jar
+The installer automatically:
+- Verifies Java and Maven installation
+- Builds the project with Maven
+- Installs to `%LOCALAPPDATA%\screenshot-tool\`
+- Creates Start Menu shortcut with global hotkey (choose `Ctrl+Alt+S` or custom)
+- Configures autostart on login via Startup folder
+- Creates global `screenshot` command in `%USERPROFILE%\bin\`
+
+> **Note:** Log out and back in after installing for the hotkey to activate.
+
+## Uninstall (Windows)
+
+```batch
+installers\windows\uninstall.bat
 ```
 
 ---
 
 ## Usage
 
-### First run (Linux)
+### First run
 ```bash
+# Linux
+screenshot
+
+# Windows
 screenshot
 ```
 Launches the app in the background. The tray icon appears in the system tray.
 
 ### Capture
-- Press `Ctrl+Alt+S`
-- Or run `screenshot` from terminal (Linux — triggers capture if already running)
+- Press `Ctrl+Alt+S` (or your custom hotkey)
+- Or run `screenshot` from terminal (triggers capture if already running)
 - Or click the tray icon → **Capture area**
 
 ### Cancel selection
@@ -147,9 +164,15 @@ mvn clean package
 
 ```
 screenshot-tool/
-├── instalar.sh                         # Linux installer
-├── uninstall.sh                        # Linux uninstaller
-├── pom.xml                             # Maven build file
+├── installers/
+│   ├── linux/
+│   │   ├── instalar.sh             # Linux installer
+│   │   └── uninstall.sh            # Linux uninstaller
+│   └── windows/
+│       ├── instalar.bat            # Windows installer
+│       └── uninstall.bat           # Windows uninstaller
+├── pom.xml                         # Maven build file
+├── README.md
 └── src/main/
     ├── java/com/screenshottool/
     │   ├── ScreenshotApp.java              # JavaFX entry point
@@ -179,11 +202,19 @@ screenshot-tool/
 
 The `screenshot` command avoids launching multiple instances via a file-based trigger:
 
+**Linux:**
 ```
 screenshot (1st run)  → launches app in background
 screenshot (2nd run)  → creates /tmp/screenshottool.trigger
                       → AppContext detects it within 300ms
                       → triggers capture immediately
+```
+
+**Windows:**
+```
+screenshot (1st run)  → launches app in background
+screenshot (2nd run)  → detects running instance via tasklist
+                      → shows message: use hotkey to capture
 ```
 
 The app stays running in the tray for the entire session — no need to relaunch it.
