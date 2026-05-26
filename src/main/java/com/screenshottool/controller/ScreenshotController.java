@@ -245,82 +245,88 @@ public class ScreenshotController implements Initializable {
     }
 
     private void mostrarToast(File archivo) {
-        Stage toast = new Stage();
-        toast.initOwner(stage);
-        toast.initModality(Modality.NONE);
-        toast.initStyle(StageStyle.UNDECORATED);
-        toast.setAlwaysOnTop(true);
+    Stage toast = new Stage();
+    toast.initOwner(stage);
+    toast.initModality(Modality.NONE);
+    toast.initStyle(StageStyle.UNDECORATED);
+    toast.setAlwaysOnTop(true);
 
-        Label lbl = new Label("✅ Guardado: " + archivo.getName());
-        lbl.getStyleClass().add("toast-label");
+    Label lbl = new Label("✅ Guardado: " + archivo.getName());
+    lbl.getStyleClass().add("toast-label");
 
-        Button btnAbrir = new Button("Abrir archivo");
-        btnAbrir.getStyleClass().add("btn-abrir");
-        btnAbrir.setOnAction(e -> {
-            toast.close();
-            servicio.abrirArchivo(archivo);
-        });
+    Button btnAbrir = new Button("Abrir archivo");
+    btnAbrir.getStyleClass().add("btn-abrir");
+    btnAbrir.setOnAction(e -> {
+        toast.close();
+        servicio.abrirArchivo(archivo);
+    });
 
-        Button btnCerrar = new Button("✕");
-        btnCerrar.getStyleClass().add("btn-toast-cerrar");
-        btnCerrar.setOnAction(e -> toast.close());
+    Button btnCerrar = new Button("✕");
+    btnCerrar.getStyleClass().add("btn-toast-cerrar");
+    btnCerrar.setOnAction(e -> toast.close());
 
-        HBox botones = new HBox(8, btnAbrir, btnCerrar);
-        botones.setAlignment(javafx.geometry.Pos.CENTER);
-        botones.setPadding(new javafx.geometry.Insets(0, 12, 10, 12));
+    HBox botones = new HBox(8, btnAbrir, btnCerrar);
+    botones.setAlignment(javafx.geometry.Pos.CENTER);
+    botones.setPadding(new javafx.geometry.Insets(0, 12, 10, 12));
 
-        VBox layout = new VBox(4, lbl, botones);
-        layout.getStyleClass().add("toast-container");
-        layout.setAlignment(javafx.geometry.Pos.CENTER);
+    VBox layout = new VBox(4, lbl, botones);
+    layout.getStyleClass().add("toast-container");
+    layout.setAlignment(javafx.geometry.Pos.CENTER);
 
-        Scene scene = new Scene(layout);
-        scene.setFill(javafx.scene.paint.Color.TRANSPARENT);
-        scene.getStylesheets().add(
-                getClass().getResource("/com/screenshottool/css/style.css").toExternalForm());
-        toast.setScene(scene);
-        toast.show();
+    Scene scene = new Scene(layout);
+    scene.setFill(javafx.scene.paint.Color.TRANSPARENT);
+    scene.getStylesheets().add(
+            getClass().getResource("/com/screenshottool/css/style.css").toExternalForm());
+    toast.setScene(scene);
+    toast.show();
 
-        // Centrar en pantalla
-        // Centrar en la misma pantalla donde está el diálogo principal
+    // Función para centrar el toast sobre la pantalla del stage principal
+    Runnable centrarToast = () -> {
         javafx.stage.Screen pantalla = javafx.stage.Screen.getScreensForRectangle(
                 stage.getX(), stage.getY(), stage.getWidth(), stage.getHeight())
                 .stream().findFirst()
                 .orElse(javafx.stage.Screen.getPrimary());
-
         javafx.geometry.Rectangle2D bounds = pantalla.getVisualBounds();
         toast.setX(bounds.getMinX() + (bounds.getWidth() - toast.getWidth()) / 2);
         toast.setY(bounds.getMinY() + (bounds.getHeight() - toast.getHeight()) / 2);
+    };
 
-        // Flag para evitar doble cierre
-final boolean[] cerrado = { false };
+    // Centrar al mostrar
+    centrarToast.run();
 
-javafx.animation.PauseTransition pause = 
-    new javafx.animation.PauseTransition(javafx.util.Duration.seconds(4));
-pause.setOnFinished(e -> {
-    if (!cerrado[0]) {
-        cerrado[0] = true;
-        Platform.runLater(() -> {
-            if (toast.isShowing()) toast.close();
-            if (stage.isShowing()) stage.close();
-        });
-    }
-});
-pause.play();
+    // Seguir al stage si se mueve a otra pantalla
+    stage.xProperty().addListener((obs, old, val) -> centrarToast.run());
+    stage.yProperty().addListener((obs, old, val) -> centrarToast.run());
 
-toast.setOnHidden(e -> {
-    if (!cerrado[0]) {
-        cerrado[0] = true;
-        pause.stop();
-        // Pequeño delay para que GTK termine de procesar el cierre del toast
-        Platform.runLater(() -> {
-            new Thread(() -> {
-                try { Thread.sleep(100); } catch (InterruptedException ignored) {}
-                Platform.runLater(() -> {
-                    if (stage.isShowing()) stage.close();
-                });
-            }).start();
-        });
-    }
-});
-    }
+    // Flag para evitar doble cierre
+    final boolean[] cerrado = { false };
+
+    javafx.animation.PauseTransition pause =
+        new javafx.animation.PauseTransition(javafx.util.Duration.seconds(4));
+    pause.setOnFinished(e -> {
+        if (!cerrado[0]) {
+            cerrado[0] = true;
+            Platform.runLater(() -> {
+                if (toast.isShowing()) toast.close();
+                if (stage.isShowing()) stage.close();
+            });
+        }
+    });
+    pause.play();
+
+    toast.setOnHidden(e -> {
+        if (!cerrado[0]) {
+            cerrado[0] = true;
+            pause.stop();
+            Platform.runLater(() -> {
+                new Thread(() -> {
+                    try { Thread.sleep(100); } catch (InterruptedException ignored) {}
+                    Platform.runLater(() -> {
+                        if (stage.isShowing()) stage.close();
+                    });
+                }).start();
+            });
+        }
+    });
+}
 }
