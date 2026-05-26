@@ -56,10 +56,11 @@ public class AppContext {
 
     /// ── Flujo principal de captura ────────────────────────
     public void iniciarCaptura() {
+        // Cerrar diálogo previo si existe
         if (dialogoActual != null && dialogoActual.isShowing()) {
             dialogoActual.close();
-            dialogoActual = null;
         }
+        dialogoActual = null; // ← siempre limpiar
 
         new Thread(() -> {
             try {
@@ -150,7 +151,7 @@ public class AppContext {
             }
             stage.setScene(scene);
             String os = System.getProperty("os.name").toLowerCase();
-            if (os.contains("win")) {
+            if (!os.contains("win")) {
                 stage.setAlwaysOnTop(true);
             }
 
@@ -166,6 +167,9 @@ public class AppContext {
             dialogoActual = stage;
             stage.show();
             stage.centerOnScreen();
+
+            // Limpiar dialogoActual al cerrar con el botón X
+            stage.setOnCloseRequest(e -> dialogoActual = null);
 
         } catch (IOException e) {
             e.printStackTrace();
@@ -236,8 +240,11 @@ public class AppContext {
         alert.setHeaderText(null);
         alert.setContentText(mensaje);
         alert.initOwner(null);
-        ((javafx.stage.Stage) alert.getDialogPane().getScene().getWindow())
-                .setAlwaysOnTop(true);
+        String os = System.getProperty("os.name").toLowerCase();
+        if (!os.contains("win")) {
+            ((javafx.stage.Stage) alert.getDialogPane().getScene().getWindow())
+                    .setAlwaysOnTop(true);
+        }
         alert.show();
     }
 }
