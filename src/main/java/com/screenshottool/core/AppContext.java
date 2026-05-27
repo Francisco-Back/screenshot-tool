@@ -55,7 +55,7 @@ public class AppContext {
         iniciarMonitorTrigger();
     }
 
-    /// ── Flujo principal de captura ────────────────────────java
+    /// ── Flujo principal de captura ────────────────────────
     public void iniciarCaptura() {
         // Cerrar diálogo previo si existe
         if (dialogoActual != null && dialogoActual.isShowing()) {
@@ -91,13 +91,12 @@ public class AppContext {
         }
     }
 
-    // Llamado desde SelectorDeAreaBridge con el área seleccionada
+    // Llamado desde SelectorDeAreaBridge con el área seleccionada (hilo AWT)
     void mostrarDialogoConArea(Rectangle area) {
         new Thread(() -> {
             try {
                 BufferedImage imagen = servicio.capturarAreaConBackend(area);
-                if (imagen == null)
-                    return;
+                if (imagen == null) return;
                 if (servicio.imagenPareceBlancoNegro(imagen)) {
                     System.err.println("[ADVERTENCIA] Captura en negro.");
                 }
@@ -109,25 +108,59 @@ public class AppContext {
         }).start();
     }
 
+    // Crea un Stage oculto con título, ícono y estilo ya configurados.
+    // Aparece en la barra de tareas con el ícono correcto desde el momento
+    // en que el usuario termina de seleccionar el área.
+    private Stage crearStageListo() {
+        Stage stage = new Stage();
+        stage.setTitle("Captura de pantalla");
+        stage.setResizable(false);
+        stage.initStyle(StageStyle.DECORATED);
+
+        // Íconos antes de cualquier show() — clave para evitar el flash de Java
+        try {
+            for (String path : new String[]{
+                    "/com/screenshottool/img/icon-128.png",
+                    "/com/screenshottool/img/icon-48.png",
+                    "/com/screenshottool/img/icon-32.png",
+                    "/com/screenshottool/img/icon-16.png"}) {
+                URL iconUrl = getClass().getResource(path);
+                if (iconUrl != null)
+                    stage.getIcons().add(new javafx.scene.image.Image(iconUrl.toExternalForm()));
+            }
+        } catch (Exception ignored) {
+        }
+
+        String os = System.getProperty("os.name").toLowerCase();
+        if (!os.contains("win")) {
+            stage.setAlwaysOnTop(true);
+        }
+
+        return stage;
+    }
+
     // ── Mostrar diálogo de guardado ───────────────────────
+    // Overload para Linux / flujo sin stage previo
     private void mostrarDialogo(BufferedImage imagenAWT) {
-        // Guard: evitar doble carga simultánea del FXML (causa "Duplicate fx:id")
-        if (dialogoCargando)
-            return;
+        mostrarDialogo(imagenAWT, null);
+    }
+
+    // Overload principal — stageExistente puede ser null (crea uno nuevo)
+    private void mostrarDialogo(BufferedImage imagenAWT, Stage stageExistente) {
+        if (dialogoCargando) return;
         dialogoCargando = true;
         try {
             servicio.copiarAlPortapapeles(imagenAWT);
 
-            // Preparar modelo
             CapturaModel modelo = new CapturaModel();
             modelo.setImagen(SwingFXUtils.toFXImage(imagenAWT, null));
             modelo.setAnchoReal(imagenAWT.getWidth());
             modelo.setAltoReal(imagenAWT.getHeight());
 
-            // Cargar FXML
             URL fxmlUrl = getClass().getResource("/com/screenshottool/fxml/main.fxml");
             if (fxmlUrl == null) {
                 System.err.println("[ERROR] No se encontró main.fxml en el classpath");
+                dialogoCargando = false;
                 return;
             }
             FXMLLoader loader = new FXMLLoader(fxmlUrl);
@@ -135,73 +168,34 @@ public class AppContext {
 
             ScreenshotController controller = loader.getController();
 
-            Stage stage = new Stage();
-            stage.setTitle("Captura de pantalla");
-            stage.setResizable(false);
-            stage.initStyle(StageStyle.DECORATED);
+            // Reusar stage preparado (con ícono ya cargado) o crear uno nuevo
+            Stage stage = (stageExistente != null) ? stageExistente : crearStageListo();
 
-            // Ícono de la ventana
-            // Cargar múltiples tamaños del ícono:
-            // Windows usa 16px para título, 32px para alt-tab, 48px para barra de tareas
-            // Si solo tienes un PNG grande, JavaFX lo escala — pero cargarlo en 3 tamaños
-            // evita el blur por downscaling que hace que se vea pequeño/borroso.
-            try {
-                String[] sizes = { "/com/screenshottool/img/icon-256.png",
-                        "/com/screenshottool/img/icon-48.png",
-                        "/com/screenshottool/img/icon-32.png",
-                        "/com/screenshottool/img/icon-16.png",
-                        // Fallback: tu ícono original
-                        "/com/screenshottool/img/captura-de-pantalla.png" };
-                for (String path : sizes) {
-                    URL iconUrl = getClass().getResource(path);
-                    if (iconUrl != null) {
-                        stage.getIcons().add(new javafx.scene.image.Image(iconUrl.toExternalForm()));
-                    }
-                }
-            } catch (Exception ignored) {
-            }
-
-            // Tema claro/oscuro
             Scene scene = new Scene(root);
             if (isDarkMode()) {
                 root.setStyle("-fx-base: #1a1a1a; -fx-background: #2b2b2b;");
             }
-            stage.setScene(scene);
-            String os = System.getProperty("os.name").toLowerCase();
-            if (!os.contains("win")) {
-                stage.setAlwaysOnTop(true);
-            }
+            stage.setScene(scene); // reemplaza loading screen o asigna nueva escena
 
-            // Inyectar dependencias en el controlador
-            controller.init(
-                    modelo,
-                    servicio,
-                    imagenAWT,
-                    stage,
-                    this::iniciarCaptura // callback al presionar Cancelar
-            );
+            controller.init(modelo, servicio, imagenAWT, stage, this::iniciarCaptura);
 
-            dialogoCargando = false; // liberar — diálogo ya en pantalla
+            dialogoCargando = false;
             dialogoActual = stage;
             stage.show();
-            // stage.centerOnScreen();
 
-            // Limpiar dialogoActual al cerrar con el botón X
             stage.setOnCloseRequest(e -> {
                 dialogoActual = null;
-                // Notificar al HotkeyManager para recuperar el foco
                 hotkeyManager.recuperarFoco();
             });
 
-            // También al cerrar normalmente via código
             stage.setOnHidden(e -> {
                 dialogoActual = null;
                 dialogoCargando = false;
                 hotkeyManager.recuperarFoco();
             });
 
-            dialogoCargando = false; // liberar en error
         } catch (IOException e) {
+            dialogoCargando = false;
             e.printStackTrace();
             mostrarError("Error al abrir el diálogo: " + e.getMessage());
         }
@@ -277,5 +271,6 @@ public class AppContext {
         }
         alert.show();
     }
+
 
 }
