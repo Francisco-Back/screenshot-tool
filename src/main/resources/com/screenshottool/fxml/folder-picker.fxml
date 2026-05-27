@@ -5,68 +5,75 @@
 <?import javafx.geometry.Insets?>
 
 <!--
-    folder-picker.fxml - Selector de carpeta de destino
+    folder-picker.fxml — Fluent Design (Windows 11)
     Controller: com.screenshottool.controller.FolderPickerController
 
-    Layout:
-      ┌──────────────────────────────────┐
-      │  Carpeta de destino              │
-      │  ┌────────────────────────────┐  │
-      │  │ lblCarpetaActual (ruta)    │  │
-      │  └────────────────────────────┘  │
-      │  [Examinar...]                   │
-      │                                  │
-      │  [Confirmar]        [Cancelar]   │
-      └──────────────────────────────────┘
+    Cambios de diseño:
+      • Título con tipografía Display (16px semi-bold)
+      • Ícono de carpeta decorativo (emoji como placeholder)
+      • Contenedor de ruta con fondo section-card
+      • Botón Examinar con estilo ghost/outline
+      • Botones de acción alineados a la derecha (convención Win11)
+      • Espaciado generoso (16px padding interno)
 -->
 
 <VBox xmlns="http://javafx.com/javafx"
       xmlns:fx="http://javafx.com/fxml"
       fx:controller="com.screenshottool.controller.FolderPickerController"
-      spacing="12"
-      prefWidth="440"
+      spacing="16"
+      prefWidth="460"
       styleClass="root-container"
       stylesheets="@../css/style.css">
 
-    <padding><Insets top="20" left="20" right="20" bottom="20"/></padding>
+    <padding><Insets top="24" left="24" right="24" bottom="20"/></padding>
 
-    <!-- ── Título ───────────────────────────────────────── -->
-    <Label text="Carpeta de destino"
-           styleClass="picker-titulo"/>
-
-    <!-- ── Ruta actual ──────────────────────────────────── -->
-    <VBox styleClass="picker-ruta-container" spacing="4">
-        <Label text="Ruta seleccionada:" styleClass="lbl-campo"/>
-        <Label fx:id="lblCarpetaActual"
-               styleClass="picker-ruta"
-               wrapText="true"
-               maxWidth="400"/>
+    <!-- ── Encabezado ──────────────────────────────────── -->
+    <VBox spacing="2">
+        <Label text="Seleccionar carpeta de destino"
+               styleClass="picker-titulo"/>
+        <Label text="Elige dónde se guardarán tus capturas"
+               styleClass="picker-subtitle"/>
     </VBox>
 
-    <!-- ── Botón examinar ───────────────────────────────── -->
+    <!-- ── Tarjeta: ruta actual ────────────────────────── -->
+    <VBox styleClass="picker-ruta-container" spacing="6">
+
+        <HBox spacing="10" alignment="CENTER_LEFT">
+            <Label text="📁" styleClass="picker-folder-icon"/>
+            <VBox spacing="2" HBox.hgrow="ALWAYS">
+                <Label text="Ruta seleccionada" styleClass="lbl-campo"/>
+                <Label fx:id="lblCarpetaActual"
+                       styleClass="picker-ruta"
+                       wrapText="true"
+                       maxWidth="380"/>
+            </VBox>
+        </HBox>
+    </VBox>
+
+    <!-- ── Botón examinar ──────────────────────────────── -->
     <Button fx:id="btnExaminar"
-            text="📂  Examinar..."
+            text="Examinar carpetas..."
             styleClass="btn-examinar"
             onAction="#onExaminar"
-            prefWidth="160"/>
+            prefWidth="180"/>
 
-    <!-- ── Separador ────────────────────────────────────── -->
+    <!-- ── Separador ───────────────────────────────────── -->
     <Separator/>
 
-    <!-- ── Confirmar / Cancelar ─────────────────────────── -->
-    <HBox spacing="10" alignment="CENTER_RIGHT">
+    <!-- ── Confirmar / Cancelar ────────────────────────── -->
+    <HBox spacing="8" alignment="CENTER_RIGHT">
         <Button fx:id="btnConfirmar"
-                text="✓  Confirmar"
+                text="Confirmar"
                 styleClass="btn-guardar"
                 defaultButton="true"
                 onAction="#onConfirmar"
-                prefWidth="120"/>
+                prefWidth="110"/>
         <Button fx:id="btnCancelar"
-                text="✕  Cancelar"
+                text="Cancelar"
                 styleClass="btn-cancelar"
                 cancelButton="true"
                 onAction="#onCancelar"
-                prefWidth="120"/>
+                prefWidth="100"/>
     </HBox>
 
 </VBox>

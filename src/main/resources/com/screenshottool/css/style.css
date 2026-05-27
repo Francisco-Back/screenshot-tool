@@ -1,180 +1,316 @@
 /*
- * style.css - Screenshot Tool
- * Usa variables de JavaFX para adaptarse automáticamente
- * al tema claro/oscuro del sistema operativo.
- * Sin colores hardcodeados excepto los botones de acción
- * (Guardar=verde, Copiar=azul) que son intencionales.
+ * style.css — Screenshot Tool · Fluent Design (Windows 11)
+ * Compatible: Win10, Win11, Linux, macOS + JavaFX 21+
+ * Sin colores hardcodeados excepto acentos intencionales.
  */
 
-/* ── Contenedor raíz ─────────────────────────────────── */
+/* ══════════════════════════════════════════════════════════
+   ROOT
+   ══════════════════════════════════════════════════════════ */
 .root-container {
     -fx-background-color: -fx-background;
+    -fx-font-family: "Segoe UI Variable Text", "Segoe UI", system;
 }
 
-/* ── Info de dimensiones ─────────────────────────────── */
+/* ══════════════════════════════════════════════════════════
+   CHIP INFO
+   ══════════════════════════════════════════════════════════ */
 .lbl-info {
-    -fx-font-size: 12px;
-    -fx-font-weight: bold;
-    -fx-text-fill: -fx-accent;
-    -fx-padding: 4 16 4 16;
+    -fx-font-size: 11px;
+    -fx-text-fill: #0078D4;
+    -fx-background-color: rgba(0, 120, 212, 0.10);
+    -fx-background-radius: 20;
+    -fx-padding: 3 12 3 12;
 }
 
-/* ── Preview ─────────────────────────────────────────── */
+/* ══════════════════════════════════════════════════════════
+   PREVIEW
+   ══════════════════════════════════════════════════════════ */
 .preview-container {
-    -fx-background-color: derive(-fx-background, -8%);
-    -fx-border-color: derive(-fx-background, -20%);
+    -fx-background-color: derive(-fx-background, -5%);
+    -fx-border-color: derive(-fx-background, -16%);
     -fx-border-width: 1;
-    -fx-border-radius: 4;
-    -fx-background-radius: 4;
-    -fx-padding: 4;
+    -fx-border-radius: 8;
+    -fx-background-radius: 8;
+    -fx-padding: 6;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.10), 8, 0, 0, 2);
 }
 
-/* ── Labels de campo ─────────────────────────────────── */
+/* ══════════════════════════════════════════════════════════
+   SECTION CARD
+   ══════════════════════════════════════════════════════════ */
+.section-card {
+    -fx-background-color: derive(-fx-background, -4%);
+    -fx-border-color: derive(-fx-background, -14%);
+    -fx-border-width: 1;
+    -fx-border-radius: 8;
+    -fx-background-radius: 8;
+    -fx-padding: 12 14 12 14;
+}
+
+/* ══════════════════════════════════════════════════════════
+   LABELS
+   ══════════════════════════════════════════════════════════ */
 .lbl-campo {
-    -fx-font-size: 12px;
+    -fx-font-size: 11px;
+    -fx-text-fill: derive(-fx-text-base-color, 30%);
+}
+
+.lbl-carpeta {
+    -fx-font-family: "Cascadia Code", "Consolas", monospace;
+    -fx-font-size: 11px;
     -fx-text-fill: -fx-text-base-color;
 }
 
-/* ── TextField nombre ────────────────────────────────── */
-.txt-nombre {
-    -fx-font-family: monospace;
-    -fx-font-size: 12px;
-}
-
-/* ── ComboBox formato ────────────────────────────────── */
-.cmb-formato {
-    -fx-font-family: monospace;
-    -fx-font-size: 12px;
-}
-
-/* ── Label carpeta ───────────────────────────────────── */
-.lbl-carpeta {
-    -fx-font-family: monospace;
-    -fx-font-size: 11px;
-    -fx-text-fill: derive(-fx-text-base-color, 20%);
-}
-
-/* ── Label estado ────────────────────────────────────── */
 .lbl-estado {
     -fx-font-size: 11px;
     -fx-font-style: italic;
+    -fx-text-fill: derive(-fx-text-base-color, 35%);
 }
 
-/* ── Botón Guardar (verde intencional) ───────────────── */
-.btn-guardar {
-    -fx-background-color: #3cb371;
-    -fx-text-fill: white;
-    -fx-font-weight: bold;
+/* ══════════════════════════════════════════════════════════
+   TEXTFIELD — underline style Fluent
+   ══════════════════════════════════════════════════════════ */
+.txt-nombre {
+    -fx-font-family: "Cascadia Code", "Consolas", monospace;
     -fx-font-size: 12px;
-    -fx-background-radius: 6;
-    -fx-cursor: hand;
+    -fx-background-color: derive(-fx-background, -6%), derive(-fx-background, -2%);
+    -fx-background-insets: 0, 0 0 1.5 0;
+    -fx-background-radius: 4 4 0 0, 4 4 0 0;
+    -fx-padding: 5 8 5 8;
+    -fx-border-color: transparent;
 }
-.btn-guardar:hover {
-    -fx-background-color: derive(#3cb371, -10%);
-}
-.btn-guardar:disabled {
-    -fx-opacity: 0.5;
+.txt-nombre:focused {
+    -fx-background-color: #0078D4, derive(-fx-background, -2%);
+    -fx-background-insets: 0 0 0 0, 0 0 2 0;
+    -fx-background-radius: 4 4 0 0, 4 4 0 0;
 }
 
-/* ── Botón Copiar (azul intencional) ─────────────────── */
-.btn-copiar {
-    -fx-background-color: #1e90ff;
-    -fx-text-fill: white;
+/* ══════════════════════════════════════════════════════════
+   COMBOBOX
+   ══════════════════════════════════════════════════════════ */
+.cmb-formato {
+    -fx-font-family: "Cascadia Code", "Consolas", monospace;
     -fx-font-size: 12px;
-    -fx-background-radius: 6;
-    -fx-cursor: hand;
-}
-.btn-copiar:hover {
-    -fx-background-color: derive(#1e90ff, -10%);
-}
-
-/* ── Botón Cancelar (neutro, sigue el tema) ──────────── */
-.btn-cancelar {
-    -fx-background-color: derive(-fx-background, -15%);
-    -fx-text-fill: -fx-text-base-color;
-    -fx-font-size: 12px;
-    -fx-background-radius: 6;
-    -fx-cursor: hand;
-}
-.btn-cancelar:hover {
-    -fx-background-color: derive(-fx-background, -25%);
-}
-
-/* ── Botón Cambiar carpeta (neutro, sigue el tema) ───── */
-.btn-cambiar {
-    -fx-font-size: 11px;
-    -fx-background-radius: 4;
-    -fx-cursor: hand;
-}
-
-/* ── Botón Examinar (neutro, sigue el tema) ──────────── */
-.btn-examinar {
-    -fx-font-size: 12px;
-    -fx-background-radius: 6;
-    -fx-cursor: hand;
-}
-
-/* ── folder-picker: título ───────────────────────────── */
-.picker-titulo {
-    -fx-font-size: 14px;
-    -fx-font-weight: bold;
-    -fx-text-fill: -fx-text-base-color;
-}
-
-/* ── folder-picker: contenedor de ruta ───────────────── */
-.picker-ruta-container {
     -fx-background-color: derive(-fx-background, -8%);
-    -fx-border-color: derive(-fx-background, -20%);
-    -fx-border-width: 1;
-    -fx-border-radius: 4;
     -fx-background-radius: 4;
-    -fx-padding: 8;
-}
-
-/* ── folder-picker: texto de ruta ────────────────────── */
-.picker-ruta {
-    -fx-font-family: monospace;
-    -fx-font-size: 12px;
-    -fx-text-fill: derive(-fx-text-base-color, 10%);
-}
-
-/* ── Toast de confirmación (sigue el tema) ───────────── */
-.toast-container {
-    -fx-background-color: derive(-fx-background, -12%);
-    -fx-border-color: derive(-fx-background, -25%);
+    -fx-border-color: derive(-fx-background, -22%);
+    -fx-border-radius: 4;
     -fx-border-width: 1;
+}
+.cmb-formato:hover {
+    -fx-background-color: derive(-fx-background, -13%);
+}
+.cmb-formato .list-view {
+    -fx-background-color: -fx-background;
     -fx-background-radius: 8;
     -fx-border-radius: 8;
-    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.3), 10, 0, 0, 4);
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.22), 16, 0, 0, 6);
+}
+.cmb-formato .list-cell:filled:selected {
+    -fx-background-color: rgba(0, 120, 212, 0.14);
+    -fx-text-fill: -fx-text-base-color;
+}
+.cmb-formato .list-cell:filled:hover {
+    -fx-background-color: derive(-fx-background, -10%);
 }
 
-.toast-label {
+/* ══════════════════════════════════════════════════════════
+   SEPARADORES
+   ══════════════════════════════════════════════════════════ */
+.separator > .line {
+    -fx-border-color: derive(-fx-background, -16%);
+    -fx-border-width: 0.5;
+}
+
+/* ══════════════════════════════════════════════════════════
+   BOTONES PRINCIPALES
+   ══════════════════════════════════════════════════════════ */
+
+/* Guardar — primario sólido */
+.btn-guardar {
+    -fx-background-color: #0078D4;
+    -fx-text-fill: white;
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+    -fx-background-radius: 6;
+    -fx-cursor: hand;
+    -fx-padding: 7 20 7 20;
+}
+.btn-guardar:hover    { -fx-background-color: #006CC1; }
+.btn-guardar:pressed  { -fx-background-color: #005EA3; -fx-translate-y: 1; }
+.btn-guardar:disabled { -fx-opacity: 0.45; }
+
+/* Copiar — outline */
+.btn-copiar {
+    -fx-background-color: transparent;
+    -fx-text-fill: #0078D4;
+    -fx-font-size: 13px;
+    -fx-background-radius: 6;
+    -fx-border-color: #0078D4;
+    -fx-border-width: 1.2;
+    -fx-border-radius: 6;
+    -fx-cursor: hand;
+    -fx-padding: 6 20 6 20;
+}
+.btn-copiar:hover   { -fx-background-color: rgba(0,120,212,0.08); }
+.btn-copiar:pressed { -fx-background-color: rgba(0,120,212,0.16); -fx-translate-y: 1; }
+
+/* Cancelar — ghost */
+.btn-cancelar {
+    -fx-background-color: derive(-fx-background, -10%);
+    -fx-text-fill: -fx-text-base-color;
+    -fx-font-size: 13px;
+    -fx-background-radius: 6;
+    -fx-border-color: derive(-fx-background, -22%);
+    -fx-border-width: 1;
+    -fx-border-radius: 6;
+    -fx-cursor: hand;
+    -fx-padding: 6 20 6 20;
+}
+.btn-cancelar:hover   { -fx-background-color: derive(-fx-background, -17%); }
+.btn-cancelar:pressed { -fx-translate-y: 1; }
+
+/* Cambiar (inline) */
+.btn-cambiar {
+    -fx-font-size: 11px;
+    -fx-background-color: transparent;
+    -fx-text-fill: #0078D4;
+    -fx-border-color: transparent;
+    -fx-background-radius: 4;
+    -fx-cursor: hand;
+    -fx-padding: 3 8 3 8;
+}
+.btn-cambiar:hover {
+    -fx-background-color: rgba(0,120,212,0.09);
+    -fx-border-color: rgba(0,120,212,0.20);
+    -fx-border-radius: 4;
+    -fx-border-width: 1;
+}
+
+/* ══════════════════════════════════════════════════════════
+   FOLDER PICKER
+   ══════════════════════════════════════════════════════════ */
+.picker-titulo {
+    -fx-font-family: "Segoe UI Variable Display", "Segoe UI", system;
+    -fx-font-size: 15px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -fx-text-base-color;
+}
+.picker-subtitle {
+    -fx-font-size: 11px;
+    -fx-text-fill: derive(-fx-text-base-color, 35%);
+}
+.picker-ruta-container {
+    -fx-background-color: derive(-fx-background, -6%);
+    -fx-border-color: derive(-fx-background, -18%);
+    -fx-border-width: 1;
+    -fx-border-radius: 6;
+    -fx-background-radius: 6;
+    -fx-padding: 10 12 10 12;
+}
+.picker-ruta {
+    -fx-font-family: "Cascadia Code", "Consolas", monospace;
+    -fx-font-size: 11.5px;
+    -fx-text-fill: -fx-text-base-color;
+}
+.btn-examinar {
+    -fx-font-size: 12px;
+    -fx-background-color: derive(-fx-background, -10%);
+    -fx-text-fill: -fx-text-base-color;
+    -fx-background-radius: 6;
+    -fx-border-color: derive(-fx-background, -22%);
+    -fx-border-width: 1;
+    -fx-border-radius: 6;
+    -fx-cursor: hand;
+    -fx-padding: 6 16 6 16;
+}
+.btn-examinar:hover  { -fx-background-color: derive(-fx-background, -17%); }
+.btn-examinar:pressed { -fx-translate-y: 1; }
+
+/* ══════════════════════════════════════════════════════════
+   TOAST OVERLAY (dentro del StackPane raíz, sin Stage propio)
+   ══════════════════════════════════════════════════════════ */
+.toast-container {
+    -fx-background-color: derive(-fx-background, -5%);
+    -fx-border-color: derive(-fx-background, -20%);
+    -fx-border-width: 1;
+    -fx-background-radius: 10;
+    -fx-border-radius: 10;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.28), 20, 0, 0, 6);
+}
+
+/* Barra de progreso */
+.toast-progress-bar {
+    -fx-background-color: #0078D4;
+    -fx-background-radius: 10 10 0 0;
+    -fx-pref-height: 3;
+    -fx-max-width: Infinity;
+}
+
+/* Círculo check */
+.toast-check-circle {
+    -fx-background-color: rgba(16, 124, 16, 0.13);
+    -fx-background-radius: 50;
+}
+.toast-check-icon {
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #107C10;
+}
+
+/* Textos */
+.toast-title {
     -fx-font-size: 12px;
     -fx-font-weight: bold;
     -fx-text-fill: -fx-text-base-color;
-    -fx-padding: 10 16 6 16;
 }
-
-/* ── Botón abrir archivo en toast (azul intencional) ─── */
-.btn-abrir {
-    -fx-background-color: #1e90ff;
-    -fx-text-fill: white;
+.toast-filename {
+    -fx-font-family: "Cascadia Code", "Consolas", monospace;
     -fx-font-size: 11px;
-    -fx-background-radius: 4;
-    -fx-cursor: hand;
-}
-.btn-abrir:hover {
-    -fx-background-color: derive(#1e90ff, -10%);
+    -fx-text-fill: derive(-fx-text-base-color, 25%);
 }
 
-/* ── Botón cerrar toast (neutro) ─────────────────────── */
-.btn-toast-cerrar {
-    -fx-background-color: derive(-fx-background, -20%);
+/* Botón cerrar X */
+.toast-btn-close {
+    -fx-background-color: transparent;
+    -fx-text-fill: derive(-fx-text-base-color, 35%);
+    -fx-font-size: 11px;
+    -fx-cursor: hand;
+    -fx-background-radius: 4;
+    -fx-padding: 2 5 2 5;
+    -fx-min-width: 22;
+    -fx-min-height: 22;
+}
+.toast-btn-close:hover {
+    -fx-background-color: derive(-fx-background, -18%);
     -fx-text-fill: -fx-text-base-color;
-    -fx-font-size: 11px;
-    -fx-background-radius: 4;
+}
+
+/* Botón Abrir archivo */
+.toast-btn-primary {
+    -fx-background-color: #0078D4;
+    -fx-text-fill: white;
+    -fx-font-size: 11.5px;
+    -fx-font-weight: bold;
+    -fx-background-radius: 5;
     -fx-cursor: hand;
+    -fx-padding: 5 12 5 12;
 }
-.btn-toast-cerrar:hover {
-    -fx-background-color: derive(-fx-background, -30%);
+.toast-btn-primary:hover  { -fx-background-color: #006CC1; }
+.toast-btn-primary:pressed { -fx-background-color: #005EA3; -fx-translate-y: 1; }
+
+/* Botón Mostrar en carpeta */
+.toast-btn-ghost {
+    -fx-background-color: derive(-fx-background, -10%);
+    -fx-text-fill: -fx-text-base-color;
+    -fx-font-size: 11.5px;
+    -fx-background-radius: 5;
+    -fx-border-color: derive(-fx-background, -22%);
+    -fx-border-width: 1;
+    -fx-border-radius: 5;
+    -fx-cursor: hand;
+    -fx-padding: 5 12 5 12;
 }
+.toast-btn-ghost:hover  { -fx-background-color: derive(-fx-background, -17%); }
+.toast-btn-ghost:pressed { -fx-translate-y: 1; }

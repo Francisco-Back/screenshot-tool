@@ -35,6 +35,7 @@ public class AppContext {
     private final TrayManager trayManager;
     private final HotkeyManager hotkeyManager;
     private Stage dialogoActual = null;
+    private boolean dialogoCargando = false;
 
     public AppContext() {
         this.servicio = new ScreenshotService();
@@ -110,6 +111,9 @@ public class AppContext {
 
     // ── Mostrar diálogo de guardado ───────────────────────
     private void mostrarDialogo(BufferedImage imagenAWT) {
+        // Guard: evitar doble carga simultánea del FXML (causa "Duplicate fx:id")
+        if (dialogoCargando) return;
+        dialogoCargando = true;
         try {
             servicio.copiarAlPortapapeles(imagenAWT);
 
@@ -164,6 +168,7 @@ public class AppContext {
                     this::iniciarCaptura // callback al presionar Cancelar
             );
 
+            dialogoCargando = false; // liberar — diálogo ya en pantalla
             dialogoActual = stage;
             stage.show();
             //stage.centerOnScreen();
@@ -178,9 +183,11 @@ public class AppContext {
             // También al cerrar normalmente via código
             stage.setOnHidden(e -> {
                 dialogoActual = null;
+                dialogoCargando = false;
                 hotkeyManager.recuperarFoco();
             });
 
+        dialogoCargando = false; // liberar en error
         } catch (IOException e) {
             e.printStackTrace();
             mostrarError("Error al abrir el diálogo: " + e.getMessage());
