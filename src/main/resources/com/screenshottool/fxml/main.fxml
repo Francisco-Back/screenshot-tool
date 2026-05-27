@@ -5,41 +5,36 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.geometry.Insets?>
 
-<!--
-    main.fxml — Fluent Design (Windows 11)
-    CAMBIO CLAVE: el raíz ahora es StackPane (fx:id="rootPane")
-    El VBox de contenido va dentro, y el toast se inyecta
-    como segunda capa del StackPane desde el controller.
--->
-
 <StackPane xmlns="http://javafx.com/javafx"
            xmlns:fx="http://javafx.com/fxml"
            fx:controller="com.screenshottool.controller.ScreenshotController"
            fx:id="rootPane"
            styleClass="root-container"
-           stylesheets="@../css/style.css">
+           stylesheets="@../css/style.css"
+           prefWidth="480">
 
     <!-- ── Contenido principal (capa 1) ─────────────────────── -->
-    <VBox spacing="0">
+    <VBox spacing="0" maxWidth="Infinity">
 
         <!-- Chip dimensiones -->
         <HBox alignment="CENTER">
-            <VBox.margin><Insets top="14" bottom="6"/></VBox.margin>
+            <VBox.margin><Insets top="12" bottom="4"/></VBox.margin>
             <Label fx:id="lblDimensiones" styleClass="lbl-info"/>
         </HBox>
 
-        <!-- Preview -->
+        <!-- Preview — altura dinámica con máximo -->
         <StackPane styleClass="preview-container">
-            <VBox.margin><Insets top="4" left="16" right="16" bottom="4"/></VBox.margin>
+            <VBox.margin><Insets top="6" left="16" right="16" bottom="6"/></VBox.margin>
             <ImageView fx:id="imgPreview"
-                       fitWidth="500" fitHeight="260"
+                       fitWidth="448" fitHeight="220"
                        preserveRatio="true"/>
         </StackPane>
 
         <!-- Section card: nombre + formato + carpeta -->
-        <VBox styleClass="section-card" spacing="10">
-            <VBox.margin><Insets top="10" left="16" right="16"/></VBox.margin>
+        <VBox styleClass="section-card" spacing="8">
+            <VBox.margin><Insets top="4" left="16" right="16"/></VBox.margin>
 
+            <!-- Nombre + Formato -->
             <HBox spacing="10" alignment="CENTER_LEFT">
                 <VBox spacing="3" HBox.hgrow="ALWAYS">
                     <Label text="Nombre del archivo" styleClass="lbl-campo"/>
@@ -48,16 +43,17 @@
                                promptText="captura_pantalla"
                                maxWidth="Infinity"/>
                 </VBox>
-                <VBox spacing="3" minWidth="90">
+                <VBox spacing="3" minWidth="88">
                     <Label text="Formato" styleClass="lbl-campo"/>
                     <ComboBox fx:id="cmbFormato"
                               styleClass="cmb-formato"
-                              prefWidth="90"/>
+                              prefWidth="88"/>
                 </VBox>
             </HBox>
 
-            <Separator opacity="0.5"/>
+            <Separator opacity="0.4"/>
 
+            <!-- Carpeta -->
             <HBox spacing="8" alignment="CENTER_LEFT">
                 <VBox HBox.hgrow="ALWAYS" spacing="2">
                     <Label text="Guardar en" styleClass="lbl-campo"/>
@@ -77,38 +73,39 @@
                styleClass="lbl-estado"
                maxWidth="Infinity"
                alignment="CENTER_LEFT">
-            <VBox.margin><Insets top="6" left="20" right="16" bottom="2"/></VBox.margin>
+            <VBox.margin><Insets top="4" left="20" right="16" bottom="0"/></VBox.margin>
         </Label>
 
         <!-- Separador -->
         <Separator>
-            <VBox.margin><Insets top="10"/></VBox.margin>
+            <VBox.margin><Insets top="8"/></VBox.margin>
         </Separator>
 
-        <!-- Botones -->
+        <!-- Botones con padding lateral generoso -->
         <HBox spacing="8" alignment="CENTER">
-            <VBox.margin><Insets top="12" bottom="16"/></VBox.margin>
+            <VBox.margin><Insets top="10" bottom="14" left="16" right="16"/></VBox.margin>
             <Button fx:id="btnGuardar"
                     text="Guardar"
                     styleClass="btn-guardar"
                     defaultButton="true"
                     onAction="#onGuardar"
-                    prefWidth="120"/>
+                    HBox.hgrow="ALWAYS"
+                    maxWidth="Infinity"/>
             <Button fx:id="btnCopiar"
                     text="Copiar imagen"
                     styleClass="btn-copiar"
                     onAction="#onCopiar"
-                    prefWidth="130"/>
+                    HBox.hgrow="ALWAYS"
+                    maxWidth="Infinity"/>
             <Button fx:id="btnCancelar"
                     text="Cancelar"
                     styleClass="btn-cancelar"
                     cancelButton="true"
                     onAction="#onCancelar"
-                    prefWidth="100"/>
+                    HBox.hgrow="ALWAYS"
+                    maxWidth="Infinity"/>
         </HBox>
 
     </VBox>
-
-    <!-- El toast se agrega aquí dinámicamente desde el controller -->
 
 </StackPane>

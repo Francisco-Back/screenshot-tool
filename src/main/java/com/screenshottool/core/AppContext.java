@@ -55,7 +55,7 @@ public class AppContext {
         iniciarMonitorTrigger();
     }
 
-    /// ── Flujo principal de captura ────────────────────────
+    /// ── Flujo principal de captura ────────────────────────java
     public void iniciarCaptura() {
         // Cerrar diálogo previo si existe
         if (dialogoActual != null && dialogoActual.isShowing()) {
@@ -112,7 +112,8 @@ public class AppContext {
     // ── Mostrar diálogo de guardado ───────────────────────
     private void mostrarDialogo(BufferedImage imagenAWT) {
         // Guard: evitar doble carga simultánea del FXML (causa "Duplicate fx:id")
-        if (dialogoCargando) return;
+        if (dialogoCargando)
+            return;
         dialogoCargando = true;
         try {
             servicio.copiarAlPortapapeles(imagenAWT);
@@ -139,9 +140,9 @@ public class AppContext {
             stage.setResizable(false);
             stage.initStyle(StageStyle.DECORATED);
 
-            // Ícono de la ventana
-            try {
-                URL iconUrl = getClass().getResource("/com/screenshottool/img/captura-de-pantalla.png");
+            // Ícono de la ventana — .ico contiene todos los tamaños embebidos (16,32,48,128,256)
+            try {   
+                URL iconUrl = getClass().getResource("/com/screenshottool/img/captura-de-pantalla.ico");
                 if (iconUrl != null) {
                     stage.getIcons().add(new javafx.scene.image.Image(iconUrl.toExternalForm()));
                 }
@@ -171,7 +172,7 @@ public class AppContext {
             dialogoCargando = false; // liberar — diálogo ya en pantalla
             dialogoActual = stage;
             stage.show();
-            //stage.centerOnScreen();
+            // stage.centerOnScreen();
 
             // Limpiar dialogoActual al cerrar con el botón X
             stage.setOnCloseRequest(e -> {
@@ -187,7 +188,7 @@ public class AppContext {
                 hotkeyManager.recuperarFoco();
             });
 
-        dialogoCargando = false; // liberar en error
+            dialogoCargando = false; // liberar en error
         } catch (IOException e) {
             e.printStackTrace();
             mostrarError("Error al abrir el diálogo: " + e.getMessage());
@@ -264,6 +265,5 @@ public class AppContext {
         }
         alert.show();
     }
-
 
 }
