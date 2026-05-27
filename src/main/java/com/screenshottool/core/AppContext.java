@@ -140,11 +140,23 @@ public class AppContext {
             stage.setResizable(false);
             stage.initStyle(StageStyle.DECORATED);
 
-            // Ícono de la ventana — .ico contiene todos los tamaños embebidos (16,32,48,128,256)
-            try {   
-                URL iconUrl = getClass().getResource("/com/screenshottool/img/captura-de-pantalla.ico");
-                if (iconUrl != null) {
-                    stage.getIcons().add(new javafx.scene.image.Image(iconUrl.toExternalForm()));
+            // Ícono de la ventana
+            // Cargar múltiples tamaños del ícono:
+            // Windows usa 16px para título, 32px para alt-tab, 48px para barra de tareas
+            // Si solo tienes un PNG grande, JavaFX lo escala — pero cargarlo en 3 tamaños
+            // evita el blur por downscaling que hace que se vea pequeño/borroso.
+            try {
+                String[] sizes = { "/com/screenshottool/img/icon-256.png",
+                        "/com/screenshottool/img/icon-48.png",
+                        "/com/screenshottool/img/icon-32.png",
+                        "/com/screenshottool/img/icon-16.png",
+                        // Fallback: tu ícono original
+                        "/com/screenshottool/img/captura-de-pantalla.png" };
+                for (String path : sizes) {
+                    URL iconUrl = getClass().getResource(path);
+                    if (iconUrl != null) {
+                        stage.getIcons().add(new javafx.scene.image.Image(iconUrl.toExternalForm()));
+                    }
                 }
             } catch (Exception ignored) {
             }

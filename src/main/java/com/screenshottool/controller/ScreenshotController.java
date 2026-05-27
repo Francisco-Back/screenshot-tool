@@ -169,8 +169,12 @@ public class ScreenshotController implements Initializable {
 
             Stage pickerStage = new Stage();
             pickerStage.setTitle("Elegir carpeta de destino");
+            pickerStage.setResizable(false);
             pickerStage.initModality(Modality.WINDOW_MODAL);
-            pickerStage.initOwner(stage);
+            pickerStage.initOwner(stage); // hereda comportamiento del padre
+
+            // ── Ícono: heredar los mismos íconos del stage principal ──
+            pickerStage.getIcons().addAll(stage.getIcons());
 
             Scene scene = new Scene(root);
             String estiloActual = stage.getScene().getRoot().getStyle();
@@ -179,6 +183,31 @@ public class ScreenshotController implements Initializable {
             }
 
             pickerStage.setScene(scene);
+
+            // ── Centrar sobre la ventana principal, no en pantalla ────
+            // Calcular posición ANTES de show() — el stage aún no tiene
+            // tamaño, así que usamos showAndWait() con un listener de una sola vez.
+            pickerStage.setOnShown(e -> {
+                double cx = stage.getX() + (stage.getWidth()  - pickerStage.getWidth())  / 2;
+                double cy = stage.getY() + (stage.getHeight() - pickerStage.getHeight()) / 2;
+
+                // Obtener bounds de la pantalla donde está el stage principal
+                javafx.stage.Screen pantalla = javafx.stage.Screen
+                    .getScreensForRectangle(stage.getX(), stage.getY(),
+                                            stage.getWidth(), stage.getHeight())
+                    .stream().findFirst()
+                    .orElse(javafx.stage.Screen.getPrimary());
+
+                javafx.geometry.Rectangle2D bounds = pantalla.getVisualBounds();
+
+                // Clamp para que no se salga de la pantalla
+                cx = Math.max(bounds.getMinX(), Math.min(cx, bounds.getMaxX() - pickerStage.getWidth()));
+                cy = Math.max(bounds.getMinY(), Math.min(cy, bounds.getMaxY() - pickerStage.getHeight()));
+
+                pickerStage.setX(cx);
+                pickerStage.setY(cy);
+            });
+
             pickerStage.showAndWait();
 
         } catch (IOException ex) {
