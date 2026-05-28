@@ -10,7 +10,6 @@ import javafx.scene.layout.*;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 
-import java.awt.Desktop;
 import java.io.File;
 import java.util.function.Consumer;
 
@@ -21,8 +20,8 @@ import java.util.function.Consumer;
  * existente → funciona igual en Windows 10, Windows 11 y Linux.
  *
  * Uso:
- *   ToastService toastService = new ToastService(rootPane, stage, servicio);
- *   toastService.mostrar(archivoGuardado);
+ * ToastService toastService = new ToastService(rootPane, stage, servicio);
+ * toastService.mostrar(archivoGuardado);
  *
  * Requisito FXML: nodo raíz debe ser <StackPane fx:id="rootPane">
  */
@@ -36,14 +35,14 @@ public class ToastService {
     private VBox wrapperActual = null;
 
     public ToastService(StackPane rootPane, Stage stage,
-                        com.screenshottool.service.ScreenshotService servicio) {
+            com.screenshottool.service.ScreenshotService servicio) {
         this.rootPane = rootPane;
-        this.stage    = stage;
+        this.stage = stage;
         this.servicio = servicio;
     }
 
     // ════════════════════════════════════════════════════════
-    //  API pública
+    // API pública
     // ════════════════════════════════════════════════════════
     public void mostrar(File archivo) {
 
@@ -55,11 +54,11 @@ public class ToastService {
 
         // ── Construir nodos UI ───────────────────────────────
         Region progressBar = crearProgressBar();
-        HBox   header      = crearHeader(archivo);
+        HBox header = crearHeader(archivo);
 
-        Button btnAbrir   = new Button("Abrir archivo");
+        Button btnAbrir = new Button("Abrir archivo");
         Button btnCarpeta = new Button("Mostrar en carpeta");
-        btnAbrir  .getStyleClass().add("toast-btn-primary");
+        btnAbrir.getStyleClass().add("toast-btn-primary");
         btnCarpeta.getStyleClass().add("toast-btn-ghost");
 
         HBox acciones = new HBox(6, btnAbrir, btnCarpeta);
@@ -72,19 +71,19 @@ public class ToastService {
         VBox toast = new VBox(0, progressBar, header, new Separator(), acciones);
         toast.getStyleClass().add("toast-container");
         toast.setPrefWidth(300);
-        toast.setMaxWidth(300);  // CRÍTICO: sin esto StackPane lo estira
+        toast.setMaxWidth(300); // CRÍTICO: sin esto StackPane lo estira
         toast.setMinWidth(260);
 
         // ── Wrapper de posicionamiento ───────────────────────
         // Problema: StackPane.setAlignment ignora maxWidth y estira el hijo.
         // Solución: wrapper VBox que ocupa todo el StackPane y ubica el
-        //           toast en su esquina inferior-derecha internamente.
+        // toast en su esquina inferior-derecha internamente.
         //
-        //   VBox wrapper (fill StackPane, pickOnBounds=false)
-        //   └── Region vSpacer (vgrow=ALWAYS) ← empuja hacia abajo
-        //   └── HBox hRow (pickOnBounds=false)
-        //       ├── Region hSpacer (hgrow=ALWAYS) ← empuja a la derecha
-        //       └── VBox toast (maxWidth=300) ← el toast real
+        // VBox wrapper (fill StackPane, pickOnBounds=false)
+        // └── Region vSpacer (vgrow=ALWAYS) ← empuja hacia abajo
+        // └── HBox hRow (pickOnBounds=false)
+        // ├── Region hSpacer (hgrow=ALWAYS) ← empuja a la derecha
+        // └── VBox toast (maxWidth=300) ← el toast real
 
         Region hSpacer = new Region();
         HBox.setHgrow(hSpacer, Priority.ALWAYS);
@@ -98,7 +97,7 @@ public class ToastService {
         vSpacer.setPickOnBounds(false);
 
         VBox wrapper = new VBox(vSpacer, hRow);
-        wrapper.setPickOnBounds(false);  // no bloquea clicks al contenido de abajo
+        wrapper.setPickOnBounds(false); // no bloquea clicks al contenido de abajo
         wrapper.setPadding(new Insets(0, 16, 16, 0));
 
         // El wrapper sí ocupa todo el StackPane → setMaxSize
@@ -126,15 +125,14 @@ public class ToastService {
         progressBar.layoutBoundsProperty().addListener((obs, o, n) -> {
             if (n.getWidth() > 0)
                 progressBar.setTranslateX(
-                    -(n.getWidth() / 2.0) * (1.0 - progressBar.getScaleX()));
+                        -(n.getWidth() / 2.0) * (1.0 - progressBar.getScaleX()));
         });
 
         Timeline progressAnim = new Timeline(
-            new KeyFrame(Duration.ZERO,
-                new KeyValue(progressBar.scaleXProperty(), 1.0)),
-            new KeyFrame(Duration.seconds(4),
-                new KeyValue(progressBar.scaleXProperty(), 0.0, Interpolator.LINEAR))
-        );
+                new KeyFrame(Duration.ZERO,
+                        new KeyValue(progressBar.scaleXProperty(), 1.0)),
+                new KeyFrame(Duration.seconds(4),
+                        new KeyValue(progressBar.scaleXProperty(), 0.0, Interpolator.LINEAR)));
         progressAnim.play();
 
         // ── Lógica de cierre ─────────────────────────────────
@@ -162,24 +160,24 @@ public class ToastService {
             progressAnim.stop();
             autoCierre.stop();
             cerrar.accept(true);
-            try { Desktop.getDesktop().open(archivo.getParentFile()); }
-            catch (Exception ex) { ex.printStackTrace(); }
+            servicio.abrirArchivo(archivo.getParentFile());
         });
     }
 
     // ════════════════════════════════════════════════════════
-    //  Helpers privados
+    // Helpers privados
     // ════════════════════════════════════════════════════════
 
     /**
      * Crea el Consumer de cierre.
-     * accept(true)  → quita toast + cierra la ventana principal
+     * accept(true) → quita toast + cierra la ventana principal
      * accept(false) → solo quita el toast (reservado para uso futuro)
      */
     private Consumer<Boolean> buildCerrar(VBox toast, VBox wrapper,
-                                          Timeline progressAnim) {
+            Timeline progressAnim) {
         return (cerrarStage) -> {
-            if (!rootPane.getChildren().contains(wrapper)) return;
+            if (!rootPane.getChildren().contains(wrapper))
+                return;
 
             FadeTransition fo = new FadeTransition(Duration.millis(160), toast);
             fo.setFromValue(1);
@@ -194,7 +192,8 @@ public class ToastService {
                 progressAnim.stop();
                 rootPane.getChildren().remove(wrapper);
                 wrapperActual = null;
-                if (cerrarStage && stage.isShowing()) stage.close();
+                if (cerrarStage && stage.isShowing())
+                    stage.close();
             });
             out.play();
         };
@@ -218,7 +217,7 @@ public class ToastService {
         iconoWrap.setMaxSize(28, 28);
 
         // Título + nombre archivo
-        Label lblTitulo  = new Label("Captura guardada");
+        Label lblTitulo = new Label("Captura guardada");
         lblTitulo.getStyleClass().add("toast-title");
         Label lblArchivo = new Label(archivo.getName());
         lblArchivo.getStyleClass().add("toast-filename");

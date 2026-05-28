@@ -1,7 +1,6 @@
 /*
  * style.css — Screenshot Tool · Fluent Design (Windows 11)
  * Compatible: Win10, Win11, Linux, macOS + JavaFX 21+
- * Sin colores hardcodeados excepto acentos intencionales.
  */
 
 /* ══════════════════════════════════════════════════════════
@@ -17,8 +16,8 @@
    ══════════════════════════════════════════════════════════ */
 .lbl-info {
     -fx-font-size: 11px;
-    -fx-text-fill: #0078D4;
-    -fx-background-color: rgba(0, 120, 212, 0.10);
+    -fx-text-fill: derive(-fx-text-base-color, 10%);
+    -fx-background-color: derive(-fx-background, -14%);
     -fx-background-radius: 20;
     -fx-padding: 3 12 3 12;
 }
@@ -57,9 +56,13 @@
 }
 
 .lbl-carpeta {
-    -fx-font-family: "Cascadia Code", "Consolas", monospace;
-    -fx-font-size: 11px;
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
     -fx-text-fill: -fx-text-base-color;
+}
+
+.lbl-folder-icon {
+    -fx-font-size: 14px;
 }
 
 .lbl-estado {
@@ -69,21 +72,23 @@
 }
 
 /* ══════════════════════════════════════════════════════════
-   TEXTFIELD — underline style Fluent
+   TEXTFIELD — fondo visible en tema oscuro
    ══════════════════════════════════════════════════════════ */
 .txt-nombre {
     -fx-font-family: "Cascadia Code", "Consolas", monospace;
     -fx-font-size: 12px;
-    -fx-background-color: derive(-fx-background, -6%), derive(-fx-background, -2%);
-    -fx-background-insets: 0, 0 0 1.5 0;
-    -fx-background-radius: 4 4 0 0, 4 4 0 0;
+    -fx-background-color: derive(-fx-background, 12%);
+    -fx-background-radius: 5;
+    -fx-border-color: derive(-fx-background, 30%);
+    -fx-border-width: 1;
+    -fx-border-radius: 5;
+    -fx-text-fill: -fx-text-base-color;
     -fx-padding: 5 8 5 8;
-    -fx-border-color: transparent;
 }
 .txt-nombre:focused {
-    -fx-background-color: #0078D4, derive(-fx-background, -2%);
-    -fx-background-insets: 0 0 0 0, 0 0 2 0;
-    -fx-background-radius: 4 4 0 0, 4 4 0 0;
+    -fx-border-color: derive(-fx-background, 55%);
+    -fx-border-width: 1.5;
+    -fx-background-color: derive(-fx-background, 16%);
 }
 
 /* ══════════════════════════════════════════════════════════
@@ -92,14 +97,14 @@
 .cmb-formato {
     -fx-font-family: "Cascadia Code", "Consolas", monospace;
     -fx-font-size: 12px;
-    -fx-background-color: derive(-fx-background, -8%);
-    -fx-background-radius: 4;
-    -fx-border-color: derive(-fx-background, -22%);
-    -fx-border-radius: 4;
+    -fx-background-color: derive(-fx-background, 12%);
+    -fx-background-radius: 5;
+    -fx-border-color: derive(-fx-background, 30%);
+    -fx-border-radius: 5;
     -fx-border-width: 1;
 }
 .cmb-formato:hover {
-    -fx-background-color: derive(-fx-background, -13%);
+    -fx-background-color: derive(-fx-background, 18%);
 }
 .cmb-formato .list-view {
     -fx-background-color: -fx-background;
@@ -108,11 +113,11 @@
     -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.22), 16, 0, 0, 6);
 }
 .cmb-formato .list-cell:filled:selected {
-    -fx-background-color: rgba(0, 120, 212, 0.14);
+    -fx-background-color: derive(-fx-background, 20%);
     -fx-text-fill: -fx-text-base-color;
 }
 .cmb-formato .list-cell:filled:hover {
-    -fx-background-color: derive(-fx-background, -10%);
+    -fx-background-color: derive(-fx-background, 14%);
 }
 
 /* ══════════════════════════════════════════════════════════
@@ -127,9 +132,9 @@
    BOTONES PRINCIPALES
    ══════════════════════════════════════════════════════════ */
 
-/* Guardar — primario sólido */
+/* Guardar — gris claro con texto blanco en negrita */
 .btn-guardar {
-    -fx-background-color: #0078D4;
+    -fx-background-color: derive(-fx-background, 40%);
     -fx-text-fill: white;
     -fx-font-size: 13px;
     -fx-font-weight: bold;
@@ -137,55 +142,84 @@
     -fx-cursor: hand;
     -fx-padding: 7 20 7 20;
 }
-.btn-guardar:hover    { -fx-background-color: #006CC1; }
-.btn-guardar:pressed  { -fx-background-color: #005EA3; -fx-translate-y: 1; }
-.btn-guardar:disabled { -fx-opacity: 0.45; }
+.btn-guardar:hover    { -fx-background-color: derive(-fx-background, 50%); }
+.btn-guardar:pressed  { -fx-background-color: derive(-fx-background, 35%); -fx-translate-y: 1; }
+.btn-guardar:disabled { -fx-opacity: 0.35; }
 
-/* Copiar — outline */
+/* Copiar — outline sutil */
 .btn-copiar {
-    -fx-background-color: transparent;
-    -fx-text-fill: #0078D4;
-    -fx-font-size: 13px;
-    -fx-background-radius: 6;
-    -fx-border-color: #0078D4;
-    -fx-border-width: 1.2;
-    -fx-border-radius: 6;
-    -fx-cursor: hand;
-    -fx-padding: 6 20 6 20;
-}
-.btn-copiar:hover   { -fx-background-color: rgba(0,120,212,0.08); }
-.btn-copiar:pressed { -fx-background-color: rgba(0,120,212,0.16); -fx-translate-y: 1; }
-
-/* Cancelar — ghost */
-.btn-cancelar {
-    -fx-background-color: derive(-fx-background, -10%);
+    -fx-background-color: derive(-fx-background, 10%);
     -fx-text-fill: -fx-text-base-color;
     -fx-font-size: 13px;
     -fx-background-radius: 6;
-    -fx-border-color: derive(-fx-background, -22%);
+    -fx-border-color: derive(-fx-background, 35%);
     -fx-border-width: 1;
     -fx-border-radius: 6;
     -fx-cursor: hand;
     -fx-padding: 6 20 6 20;
 }
-.btn-cancelar:hover   { -fx-background-color: derive(-fx-background, -17%); }
+.btn-copiar:hover   { -fx-background-color: derive(-fx-background, 18%); }
+.btn-copiar:pressed { -fx-background-color: derive(-fx-background, 22%); -fx-translate-y: 1; }
+
+/* Cancelar — ghost neutro */
+.btn-cancelar {
+    -fx-background-color: transparent;
+    -fx-text-fill: derive(-fx-text-base-color, 20%);
+    -fx-font-size: 13px;
+    -fx-background-radius: 6;
+    -fx-border-color: derive(-fx-background, 20%);
+    -fx-border-width: 1;
+    -fx-border-radius: 6;
+    -fx-cursor: hand;
+    -fx-padding: 6 20 6 20;
+}
+.btn-cancelar:hover   { -fx-background-color: derive(-fx-background, 10%); }
 .btn-cancelar:pressed { -fx-translate-y: 1; }
 
-/* Cambiar (inline) */
+/* Cambiar carpeta — ancho completo ghost */
+.btn-cambiar-full {
+    -fx-font-size: 12px;
+    -fx-background-color: derive(-fx-background, -10%);
+    -fx-text-fill: -fx-text-base-color;
+    -fx-background-radius: 6;
+    -fx-border-color: derive(-fx-background, 20%);
+    -fx-border-width: 1;
+    -fx-border-radius: 6;
+    -fx-cursor: hand;
+    -fx-padding: 6 16 6 16;
+    -fx-alignment: CENTER;
+}
+.btn-cambiar-full:hover  { -fx-background-color: derive(-fx-background, -4%); }
+.btn-cambiar-full:pressed { -fx-translate-y: 1; }
+
+/* Cambiar inline — mismo alto que los campos, gris neutro */
+.btn-cambiar-inline {
+    -fx-font-size: 12px;
+    -fx-background-color: derive(-fx-background, 10%);
+    -fx-text-fill: -fx-text-base-color;
+    -fx-background-radius: 6;
+    -fx-border-color: derive(-fx-background, 28%);
+    -fx-border-width: 1;
+    -fx-border-radius: 6;
+    -fx-cursor: hand;
+    -fx-padding: 6 12 6 12;
+}
+.btn-cambiar-inline:hover  { -fx-background-color: derive(-fx-background, 18%); }
+.btn-cambiar-inline:pressed { -fx-translate-y: 1; }
+
+/* Cambiar (inline legacy) */
 .btn-cambiar {
     -fx-font-size: 11px;
     -fx-background-color: transparent;
-    -fx-text-fill: #0078D4;
+    -fx-text-fill: derive(-fx-text-base-color, 20%);
     -fx-border-color: transparent;
     -fx-background-radius: 4;
     -fx-cursor: hand;
     -fx-padding: 3 8 3 8;
 }
 .btn-cambiar:hover {
-    -fx-background-color: rgba(0,120,212,0.09);
-    -fx-border-color: rgba(0,120,212,0.20);
+    -fx-background-color: derive(-fx-background, 10%);
     -fx-border-radius: 4;
-    -fx-border-width: 1;
 }
 
 /* ══════════════════════════════════════════════════════════
@@ -219,17 +253,17 @@
     -fx-background-color: derive(-fx-background, -10%);
     -fx-text-fill: -fx-text-base-color;
     -fx-background-radius: 6;
-    -fx-border-color: derive(-fx-background, -22%);
+    -fx-border-color: derive(-fx-background, 20%);
     -fx-border-width: 1;
     -fx-border-radius: 6;
     -fx-cursor: hand;
     -fx-padding: 6 16 6 16;
 }
-.btn-examinar:hover  { -fx-background-color: derive(-fx-background, -17%); }
+.btn-examinar:hover  { -fx-background-color: derive(-fx-background, -4%); }
 .btn-examinar:pressed { -fx-translate-y: 1; }
 
 /* ══════════════════════════════════════════════════════════
-   TOAST OVERLAY (dentro del StackPane raíz, sin Stage propio)
+   TOAST OVERLAY
    ══════════════════════════════════════════════════════════ */
 .toast-container {
     -fx-background-color: derive(-fx-background, -5%);
@@ -239,18 +273,14 @@
     -fx-border-radius: 10;
     -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.28), 20, 0, 0, 6);
 }
-
-/* Barra de progreso */
 .toast-progress-bar {
     -fx-background-color: #0078D4;
     -fx-background-radius: 10 10 0 0;
     -fx-pref-height: 3;
     -fx-max-width: Infinity;
 }
-
-/* Círculo check */
 .toast-check-circle {
-    -fx-background-color: rgba(16, 124, 16, 0.13);
+    -fx-background-color: rgba(16, 124, 16, 0.18);
     -fx-background-radius: 50;
 }
 .toast-check-icon {
@@ -258,8 +288,6 @@
     -fx-font-weight: bold;
     -fx-text-fill: #107C10;
 }
-
-/* Textos */
 .toast-title {
     -fx-font-size: 12px;
     -fx-font-weight: bold;
@@ -270,8 +298,6 @@
     -fx-font-size: 11px;
     -fx-text-fill: derive(-fx-text-base-color, 25%);
 }
-
-/* Botón cerrar X */
 .toast-btn-close {
     -fx-background-color: transparent;
     -fx-text-fill: derive(-fx-text-base-color, 35%);
@@ -283,34 +309,34 @@
     -fx-min-height: 22;
 }
 .toast-btn-close:hover {
-    -fx-background-color: derive(-fx-background, -18%);
+    -fx-background-color: derive(-fx-background, 15%);
     -fx-text-fill: -fx-text-base-color;
 }
-
-/* Botón Abrir archivo */
 .toast-btn-primary {
-    -fx-background-color: #0078D4;
-    -fx-text-fill: white;
+    -fx-background-color: derive(-fx-background, 35%);
+    -fx-text-fill: -fx-text-base-color;
     -fx-font-size: 11.5px;
     -fx-font-weight: bold;
     -fx-background-radius: 5;
     -fx-cursor: hand;
     -fx-padding: 5 12 5 12;
 }
-.toast-btn-primary:hover  { -fx-background-color: #006CC1; }
-.toast-btn-primary:pressed { -fx-background-color: #005EA3; -fx-translate-y: 1; }
-
-/* Botón Mostrar en carpeta */
+.toast-btn-primary:hover  { -fx-background-color: derive(-fx-background, 45%); }
+.toast-btn-primary:pressed { -fx-translate-y: 1; }
 .toast-btn-ghost {
-    -fx-background-color: derive(-fx-background, -10%);
-    -fx-text-fill: -fx-text-base-color;
+    -fx-background-color: transparent;
+    -fx-text-fill: derive(-fx-text-base-color, 20%);
     -fx-font-size: 11.5px;
     -fx-background-radius: 5;
-    -fx-border-color: derive(-fx-background, -22%);
+    -fx-border-color: derive(-fx-background, 20%);
     -fx-border-width: 1;
     -fx-border-radius: 5;
     -fx-cursor: hand;
     -fx-padding: 5 12 5 12;
 }
-.toast-btn-ghost:hover  { -fx-background-color: derive(-fx-background, -17%); }
+.toast-btn-ghost:hover  { -fx-background-color: derive(-fx-background, 10%); }
 .toast-btn-ghost:pressed { -fx-translate-y: 1; }
+
+.picker-folder-icon {
+    -fx-font-size: 20px;
+}

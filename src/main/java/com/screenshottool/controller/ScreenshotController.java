@@ -52,7 +52,7 @@ public class ScreenshotController implements Initializable {
     private ScreenshotService servicio;
     private BufferedImage     imagenOriginal;
     private Stage             stage;
-    private Runnable          onCancelar;
+    //private Runnable          onCancelar;
     private ToastService      toastService;   // ← delegado para el toast
 
     // ── Initializable ─────────────────────────────────────────
@@ -74,7 +74,7 @@ public class ScreenshotController implements Initializable {
         this.servicio       = servicio;
         this.imagenOriginal = imagenOriginal;
         this.stage          = stage;
-        this.onCancelar     = onCancelar;
+        //this.onCancelar     = onCancelar;
 
         // ToastService se crea aquí, cuando ya tenemos rootPane + stage + servicio
         this.toastService = new ToastService(rootPane, stage, servicio);
@@ -108,7 +108,13 @@ public class ScreenshotController implements Initializable {
     }
 
     private void actualizarLblCarpeta() {
-        lblCarpeta.setText(truncarRuta(modelo.getCarpetaDestino().getAbsolutePath(), 45));
+        java.io.File carpeta = modelo.getCarpetaDestino();
+        String nombre = carpeta.getName();
+        if (nombre == null || nombre.isEmpty()) {
+            nombre = carpeta.getAbsolutePath();
+        }
+        lblCarpeta.setText(nombre);
+        lblCarpeta.setTooltip(new Tooltip(carpeta.getAbsolutePath()));
     }
 
     private void autocopiarPortapapeles() {
@@ -217,8 +223,8 @@ public class ScreenshotController implements Initializable {
 
     @FXML
     private void onCancelar() {
+        // Cerrar solo la ventana — NO reiniciar captura ni llamar callback
         stage.close();
-        if (onCancelar != null) onCancelar.run();
     }
 
     // ── Helpers ───────────────────────────────────────────────
@@ -229,8 +235,5 @@ public class ScreenshotController implements Initializable {
             : "-fx-text-fill: derive(-fx-text-base-color, 30%);");
     }
 
-    private String truncarRuta(String ruta, int maxChars) {
-        if (ruta.length() <= maxChars) return ruta;
-        return "…" + ruta.substring(ruta.length() - maxChars + 1);
-    }
+
 }

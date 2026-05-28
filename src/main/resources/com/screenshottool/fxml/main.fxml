@@ -13,7 +13,6 @@
            stylesheets="@../css/style.css"
            prefWidth="480">
 
-    <!-- ── Contenido principal (capa 1) ─────────────────────── -->
     <VBox spacing="0" maxWidth="Infinity">
 
         <!-- Chip dimensiones -->
@@ -22,7 +21,7 @@
             <Label fx:id="lblDimensiones" styleClass="lbl-info"/>
         </HBox>
 
-        <!-- Preview — altura dinámica con máximo -->
+        <!-- Preview -->
         <StackPane styleClass="preview-container">
             <VBox.margin><Insets top="6" left="16" right="16" bottom="6"/></VBox.margin>
             <ImageView fx:id="imgPreview"
@@ -30,7 +29,7 @@
                        preserveRatio="true"/>
         </StackPane>
 
-        <!-- Section card: nombre + formato + carpeta -->
+        <!-- Section card -->
         <VBox styleClass="section-card" spacing="8">
             <VBox.margin><Insets top="4" left="16" right="16"/></VBox.margin>
 
@@ -53,9 +52,10 @@
 
             <Separator opacity="0.4"/>
 
-            <!-- Carpeta -->
+            <!-- Carpeta: mitad izquierda nombre, mitad derecha botón Cambiar -->
             <HBox spacing="8" alignment="CENTER_LEFT">
-                <VBox HBox.hgrow="ALWAYS" spacing="2">
+                <Label text="📁" styleClass="lbl-folder-icon"/>
+                <VBox HBox.hgrow="ALWAYS" spacing="1">
                     <Label text="Guardar en" styleClass="lbl-campo"/>
                     <Label fx:id="lblCarpeta"
                            styleClass="lbl-carpeta"
@@ -63,8 +63,9 @@
                            wrapText="false"/>
                 </VBox>
                 <Button text="Cambiar"
-                        styleClass="btn-cambiar"
-                        onAction="#onCambiarCarpeta"/>
+                        styleClass="btn-cambiar-inline"
+                        onAction="#onCambiarCarpeta"
+                        prefWidth="110"/>
             </HBox>
         </VBox>
 
@@ -81,7 +82,7 @@
             <VBox.margin><Insets top="8"/></VBox.margin>
         </Separator>
 
-        <!-- Botones con padding lateral generoso -->
+        <!-- Botones -->
         <HBox spacing="8" alignment="CENTER">
             <VBox.margin><Insets top="10" bottom="14" left="16" right="16"/></VBox.margin>
             <Button fx:id="btnGuardar"
