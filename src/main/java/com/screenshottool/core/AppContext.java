@@ -96,7 +96,8 @@ public class AppContext {
         new Thread(() -> {
             try {
                 BufferedImage imagen = servicio.capturarAreaConBackend(area);
-                if (imagen == null) return;
+                if (imagen == null)
+                    return;
                 if (servicio.imagenPareceBlancoNegro(imagen)) {
                     System.err.println("[ADVERTENCIA] Captura en negro.");
                 }
@@ -119,11 +120,11 @@ public class AppContext {
 
         // Íconos antes de cualquier show() — clave para evitar el flash de Java
         try {
-            for (String path : new String[]{
+            for (String path : new String[] {
                     "/com/screenshottool/img/icon-128.png",
                     "/com/screenshottool/img/icon-48.png",
                     "/com/screenshottool/img/icon-32.png",
-                    "/com/screenshottool/img/icon-16.png"}) {
+                    "/com/screenshottool/img/icon-16.png" }) {
                 URL iconUrl = getClass().getResource(path);
                 if (iconUrl != null)
                     stage.getIcons().add(new javafx.scene.image.Image(iconUrl.toExternalForm()));
@@ -131,10 +132,8 @@ public class AppContext {
         } catch (Exception ignored) {
         }
 
-        String os = System.getProperty("os.name").toLowerCase();
-        if (!os.contains("win")) {
-            stage.setAlwaysOnTop(true);
-        }
+        // No usar setAlwaysOnTop en ningún sistema
+        // Permite que la ventana se comporte como ventana normal
 
         return stage;
     }
@@ -147,7 +146,8 @@ public class AppContext {
 
     // Overload principal — stageExistente puede ser null (crea uno nuevo)
     private void mostrarDialogo(BufferedImage imagenAWT, Stage stageExistente) {
-        if (dialogoCargando) return;
+        if (dialogoCargando)
+            return;
         dialogoCargando = true;
         try {
             servicio.copiarAlPortapapeles(imagenAWT);
@@ -271,6 +271,5 @@ public class AppContext {
         }
         alert.show();
     }
-
 
 }
