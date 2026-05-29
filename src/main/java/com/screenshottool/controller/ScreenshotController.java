@@ -105,6 +105,7 @@ public class ScreenshotController implements Initializable {
             txtNombre.requestFocus();
             txtNombre.selectAll();
         });
+        registrarAtajosTeclado();
     }
 
     private void actualizarLblCarpeta() {
@@ -235,5 +236,42 @@ public class ScreenshotController implements Initializable {
             : "-fx-text-fill: derive(-fx-text-base-color, 30%);");
     }
 
+// ── Atajos internos del diálogo ───────────────────────────
+private void registrarAtajosTeclado() {
+    rootPane.sceneProperty().addListener((obs, oldScene, newScene) -> {
+        if (newScene == null) return;
 
+        // Ctrl+S → guardar
+        newScene.getAccelerators().put(
+            javafx.scene.input.KeyCombination.keyCombination("Ctrl+S"),
+            this::onGuardar
+        );
+
+        // ESC → cerrar diálogo
+        newScene.getAccelerators().put(
+            javafx.scene.input.KeyCombination.keyCombination("ESC"),
+            this::onCancelar
+        );
+
+        // Ctrl+C → copiar (solo si el foco NO está en el campo de texto)
+        newScene.addEventFilter(javafx.scene.input.KeyEvent.KEY_PRESSED, e -> {
+            if (e.isControlDown() && e.getCode() == javafx.scene.input.KeyCode.C
+                    && !txtNombre.isFocused()) {
+                onCopiar();
+                e.consume();
+            }
+        });
+
+        // Delete o F2 → limpiar nombre y poner foco
+        newScene.addEventFilter(javafx.scene.input.KeyEvent.KEY_PRESSED, e -> {
+            boolean esDelete = e.getCode() == javafx.scene.input.KeyCode.DELETE;
+            boolean esF2     = e.getCode() == javafx.scene.input.KeyCode.F2;
+            if ((esDelete || esF2) && !txtNombre.isFocused()) {
+                txtNombre.clear();
+                txtNombre.requestFocus();
+                e.consume();
+            }
+        });
+    });
+}
 }

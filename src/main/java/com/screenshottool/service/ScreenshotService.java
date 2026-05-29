@@ -16,19 +16,18 @@ import java.nio.file.Files;
  * ScreenshotService - Toda la lógica de negocio.
  *
  * Jerarquía de backends para captura:
- *   1. gnome-screenshot → GNOME/Wayland/VirtualBox con Guest Additions
- *   2. scrot            → X11, funciona en VirtualBox sin Guest Additions
- *   3. xwd              → X11 alternativo, también funciona en VirtualBox
- *   4. import           → ImageMagick, alternativa X11
- *   5. Robot            → fallback final (Windows, macOS, Linux sin herramientas)
+ * 1. gnome-screenshot → GNOME/Wayland/VirtualBox con Guest Additions
+ * 2. scrot → X11, funciona en VirtualBox sin Guest Additions
+ * 3. xwd → X11 alternativo, también funciona en VirtualBox
+ * 4. import → ImageMagick, alternativa X11
+ * 5. Robot → fallback final (Windows, macOS, Linux sin herramientas)
  *
  * VirtualBox: instalar Guest Additions mejora la calidad.
- *             Sin ellas, scrot o xwd capturan correctamente via X11.
+ * Sin ellas, scrot o xwd capturan correctamente via X11.
  */
 public class ScreenshotService {
 
-    private static final File TMP_FILE =
-        new File(System.getProperty("java.io.tmpdir"), "screenshottool_tmp.png");
+    private static final File TMP_FILE = new File(System.getProperty("java.io.tmpdir"), "screenshottool_tmp.png");
 
     private final Backend backendActivo;
 
@@ -55,18 +54,22 @@ public class ScreenshotService {
 
     // ── Detección de backend ──────────────────────────────
     private Backend detectarBackend() {
-        if (comandoDisponible("gnome-screenshot")) return Backend.GNOME_SCREENSHOT;
-        if (comandoDisponible("scrot"))             return Backend.SCROT;
-        if (comandoDisponible("xwd"))               return Backend.XWD;
-        if (comandoDisponible("import"))            return Backend.IMPORT_IMAGEMAGICK;
+        if (comandoDisponible("gnome-screenshot"))
+            return Backend.GNOME_SCREENSHOT;
+        if (comandoDisponible("scrot"))
+            return Backend.SCROT;
+        if (comandoDisponible("xwd"))
+            return Backend.XWD;
+        if (comandoDisponible("import"))
+            return Backend.IMPORT_IMAGEMAGICK;
         return Backend.ROBOT;
     }
 
     private boolean comandoDisponible(String cmd) {
         try {
             Process p = new ProcessBuilder("which", cmd)
-                .redirectErrorStream(true)
-                .start();
+                    .redirectErrorStream(true)
+                    .start();
             return p.waitFor() == 0;
         } catch (Exception e) {
             return false;
@@ -77,8 +80,8 @@ public class ScreenshotService {
     public boolean enVirtualBox() {
         try {
             Process p = new ProcessBuilder("systemd-detect-virt")
-                .redirectErrorStream(true)
-                .start();
+                    .redirectErrorStream(true)
+                    .start();
             String output = new String(p.getInputStream().readAllBytes()).trim();
             return output.contains("oracle") || output.contains("virtualbox");
         } catch (Exception e) {
@@ -86,7 +89,9 @@ public class ScreenshotService {
         }
     }
 
-    public Backend getBackendActivo() { return backendActivo; }
+    public Backend getBackendActivo() {
+        return backendActivo;
+    }
 
     // ── Captura con selección de área ─────────────────────
     public BufferedImage capturarConSeleccion() throws Exception {
@@ -98,11 +103,11 @@ public class ScreenshotService {
     // ── Capturar área con el backend activo ───────────────
     public BufferedImage capturarAreaConBackend(Rectangle area) throws Exception {
         return switch (backendActivo) {
-            case GNOME_SCREENSHOT   -> capturarAreaConGnome(area);
-            case SCROT              -> capturarAreaConScrot(area);
-            case XWD                -> capturarAreaConXwd(area);
+            case GNOME_SCREENSHOT -> capturarAreaConGnome(area);
+            case SCROT -> capturarAreaConScrot(area);
+            case XWD -> capturarAreaConXwd(area);
             case IMPORT_IMAGEMAGICK -> capturarAreaConImport(area);
-            case ROBOT              -> capturarAreaConRobot(area);
+            case ROBOT -> capturarAreaConRobot(area);
         };
     }
 
@@ -110,14 +115,15 @@ public class ScreenshotService {
     private BufferedImage capturarAreaConGnome(Rectangle area) throws Exception {
         String coords = area.x + "," + area.y + "," + area.width + "," + area.height;
         Process p = new ProcessBuilder(
-            "gnome-screenshot",
-            "--area=" + coords,
-            "--file=" + TMP_FILE.getAbsolutePath())
-            .redirectErrorStream(true)
-            .start();
+                "gnome-screenshot",
+                "--area=" + coords,
+                "--file=" + TMP_FILE.getAbsolutePath())
+                .redirectErrorStream(true)
+                .start();
         int exitCode = p.waitFor();
         Thread.sleep(200);
-        if (exitCode != 0 || !TMP_FILE.exists()) return capturarAreaConRobot(area);
+        if (exitCode != 0 || !TMP_FILE.exists())
+            return capturarAreaConRobot(area);
         BufferedImage img = ImageIO.read(TMP_FILE);
         TMP_FILE.delete();
         return img;
@@ -127,13 +133,14 @@ public class ScreenshotService {
     // Funciona en VirtualBox via X11 sin necesitar Guest Additions
     private BufferedImage capturarAreaConScrot(Rectangle area) throws Exception {
         Process p = new ProcessBuilder(
-            "scrot",
-            "-a", area.x + "," + area.y + "," + area.width + "," + area.height,
-            TMP_FILE.getAbsolutePath())
-            .redirectErrorStream(true)
-            .start();
+                "scrot",
+                "-a", area.x + "," + area.y + "," + area.width + "," + area.height,
+                TMP_FILE.getAbsolutePath())
+                .redirectErrorStream(true)
+                .start();
         int exitCode = p.waitFor();
-        if (exitCode != 0 || !TMP_FILE.exists()) return capturarAreaConRobot(area);
+        if (exitCode != 0 || !TMP_FILE.exists())
+            return capturarAreaConRobot(area);
         BufferedImage img = ImageIO.read(TMP_FILE);
         TMP_FILE.delete();
         return img;
@@ -147,24 +154,26 @@ public class ScreenshotService {
         try {
             // Capturar pantalla completa con xwd
             Process p = new ProcessBuilder(
-                "xwd", "-root", "-silent", "-out", xwdTmp.getAbsolutePath())
-                .redirectErrorStream(true)
-                .start();
+                    "xwd", "-root", "-silent", "-out", xwdTmp.getAbsolutePath())
+                    .redirectErrorStream(true)
+                    .start();
             int exitCode = p.waitFor();
-            if (exitCode != 0 || !xwdTmp.exists()) return capturarAreaConRobot(area);
+            if (exitCode != 0 || !xwdTmp.exists())
+                return capturarAreaConRobot(area);
 
             // Convertir xwd a png y recortar con convert (ImageMagick)
             String crop = area.width + "x" + area.height + "+" + area.x + "+" + area.y;
             Process p2 = new ProcessBuilder(
-                "convert",
-                xwdTmp.getAbsolutePath(),
-                "-crop", crop,
-                "+repage",
-                TMP_FILE.getAbsolutePath())
-                .redirectErrorStream(true)
-                .start();
+                    "convert",
+                    xwdTmp.getAbsolutePath(),
+                    "-crop", crop,
+                    "+repage",
+                    TMP_FILE.getAbsolutePath())
+                    .redirectErrorStream(true)
+                    .start();
             int exitCode2 = p2.waitFor();
-            if (exitCode2 != 0 || !TMP_FILE.exists()) return capturarAreaConRobot(area);
+            if (exitCode2 != 0 || !TMP_FILE.exists())
+                return capturarAreaConRobot(area);
 
             BufferedImage img = ImageIO.read(TMP_FILE);
             TMP_FILE.delete();
@@ -178,12 +187,13 @@ public class ScreenshotService {
     private BufferedImage capturarAreaConImport(Rectangle area) throws Exception {
         String crop = area.width + "x" + area.height + "+" + area.x + "+" + area.y;
         Process p = new ProcessBuilder(
-            "import", "-window", "root", "-crop", crop,
-            TMP_FILE.getAbsolutePath())
-            .redirectErrorStream(true)
-            .start();
+                "import", "-window", "root", "-crop", crop,
+                TMP_FILE.getAbsolutePath())
+                .redirectErrorStream(true)
+                .start();
         int exitCode = p.waitFor();
-        if (exitCode != 0 || !TMP_FILE.exists()) return capturarAreaConRobot(area);
+        if (exitCode != 0 || !TMP_FILE.exists())
+            return capturarAreaConRobot(area);
         BufferedImage img = ImageIO.read(TMP_FILE);
         TMP_FILE.delete();
         return img;
@@ -197,16 +207,16 @@ public class ScreenshotService {
 
         // Detectar escala HiDPI
         GraphicsDevice gd = GraphicsEnvironment
-            .getLocalGraphicsEnvironment()
-            .getDefaultScreenDevice();
+                .getLocalGraphicsEnvironment()
+                .getDefaultScreenDevice();
         double scaleX = gd.getDefaultConfiguration().getDefaultTransform().getScaleX();
         double scaleY = gd.getDefaultConfiguration().getDefaultTransform().getScaleY();
 
         Rectangle areaFisica = new Rectangle(
-            (int)(area.x      * scaleX),
-            (int)(area.y      * scaleY),
-            (int)(area.width  * scaleX),
-            (int)(area.height * scaleY));
+                (int) (area.x * scaleX),
+                (int) (area.y * scaleY),
+                (int) (area.width * scaleX),
+                (int) (area.height * scaleY));
 
         return robot.createScreenCapture(areaFisica);
     }
@@ -222,10 +232,13 @@ public class ScreenshotService {
         for (int i = 0; i < 5; i++) {
             try {
                 Toolkit.getDefaultToolkit().getSystemClipboard()
-                    .setContents(transferable, null);
+                        .setContents(transferable, null);
                 return;
             } catch (IllegalStateException e) {
-                try { Thread.sleep(100); } catch (InterruptedException ignored) {}
+                try {
+                    Thread.sleep(100);
+                } catch (InterruptedException ignored) {
+                }
             }
         }
         System.err.println("[WARN] No se pudo copiar al portapapeles");
@@ -241,7 +254,7 @@ public class ScreenshotService {
         BufferedImage imgAGuardar = imagen;
         if ("jpg".equals(formato)) {
             imgAGuardar = new BufferedImage(
-                imagen.getWidth(), imagen.getHeight(), BufferedImage.TYPE_INT_RGB);
+                    imagen.getWidth(), imagen.getHeight(), BufferedImage.TYPE_INT_RGB);
             Graphics2D g2 = imgAGuardar.createGraphics();
             g2.setColor(Color.WHITE);
             g2.fillRect(0, 0, imagen.getWidth(), imagen.getHeight());
@@ -250,7 +263,8 @@ public class ScreenshotService {
         }
 
         boolean ok = ImageIO.write(imgAGuardar, formato, archivo);
-        if (!ok) throw new IOException("Formato '" + formato + "' no soportado.");
+        if (!ok)
+            throw new IOException("Formato '" + formato + "' no soportado.");
         return archivo;
     }
 
@@ -273,11 +287,12 @@ public class ScreenshotService {
         int muestras = 20, oscuros = 0;
         int w = img.getWidth(), h = img.getHeight();
         for (int i = 0; i < muestras; i++) {
-            int rgb = img.getRGB((int)(Math.random() * w), (int)(Math.random() * h));
+            int rgb = img.getRGB((int) (Math.random() * w), (int) (Math.random() * h));
             int r = (rgb >> 16) & 0xFF;
-            int g = (rgb >>  8) & 0xFF;
-            int b =  rgb        & 0xFF;
-            if (r < 10 && g < 10 && b < 10) oscuros++;
+            int g = (rgb >> 8) & 0xFF;
+            int b = rgb & 0xFF;
+            if (r < 10 && g < 10 && b < 10)
+                oscuros++;
         }
         return oscuros > muestras * 0.9;
     }
@@ -285,31 +300,106 @@ public class ScreenshotService {
     // ── Captura con selector nativo de gnome-screenshot ───
     public BufferedImage capturarConGnomeSelector() throws Exception {
         Process p = new ProcessBuilder(
-            "gnome-screenshot", "--area",
-            "--file=" + TMP_FILE.getAbsolutePath())
-            .redirectErrorStream(true)
-            .start();
+                "gnome-screenshot", "--area",
+                "--file=" + TMP_FILE.getAbsolutePath())
+                .redirectErrorStream(true)
+                .start();
         int exitCode = p.waitFor();
         Thread.sleep(200);
-        if (exitCode != 0 || !TMP_FILE.exists()) return null;
+        if (exitCode != 0 || !TMP_FILE.exists())
+            return null;
         BufferedImage img = ImageIO.read(TMP_FILE);
         TMP_FILE.delete();
         return img;
     }
 
+    // ── Captura de ventana activa ─────────────────────────
+    public BufferedImage capturarVentanaActiva() throws Exception {
+        String os = System.getProperty("os.name").toLowerCase();
+        if (os.contains("linux")) {
+            return capturarVentanaActivaLinux();
+        } else {
+            return capturarVentanaActivaWindows();
+        }
+    }
+
+    private BufferedImage capturarVentanaActivaLinux() throws Exception {
+        Thread.sleep(300);
+        if (comandoDisponible("xdotool")) {
+            Process p = new ProcessBuilder("xdotool", "getactivewindow")
+                    .redirectErrorStream(true).start();
+            String windowId = new String(p.getInputStream().readAllBytes()).trim();
+            p.waitFor();
+            if (!windowId.isEmpty()) {
+                Process p2 = new ProcessBuilder(
+                        "import", "-window", windowId, TMP_FILE.getAbsolutePath())
+                        .redirectErrorStream(true).start();
+                if (p2.waitFor() == 0 && TMP_FILE.exists()) {
+                    BufferedImage img = ImageIO.read(TMP_FILE);
+                    TMP_FILE.delete();
+                    return img;
+                }
+            }
+        }
+        // Fallback: scrot -u (ventana activa)
+        if (comandoDisponible("scrot")) {
+            Process p = new ProcessBuilder("scrot", "-u", TMP_FILE.getAbsolutePath())
+                    .redirectErrorStream(true).start();
+            if (p.waitFor() == 0 && TMP_FILE.exists()) {
+                BufferedImage img = ImageIO.read(TMP_FILE);
+                TMP_FILE.delete();
+                return img;
+            }
+        }
+        return null;
+    }
+
+    private BufferedImage capturarVentanaActivaWindows() throws Exception {
+        Thread.sleep(300);
+        Robot robot = new Robot();
+        robot.waitForIdle();
+
+        Window focusedWindow = KeyboardFocusManager
+                .getCurrentKeyboardFocusManager().getFocusedWindow();
+
+        Rectangle bounds = focusedWindow != null ? focusedWindow.getBounds()
+                : GraphicsEnvironment.getLocalGraphicsEnvironment()
+                        .getDefaultScreenDevice().getDefaultConfiguration().getBounds();
+
+        GraphicsDevice gd = GraphicsEnvironment.getLocalGraphicsEnvironment()
+                .getDefaultScreenDevice();
+        double scaleX = gd.getDefaultConfiguration().getDefaultTransform().getScaleX();
+        double scaleY = gd.getDefaultConfiguration().getDefaultTransform().getScaleY();
+
+        Rectangle areaFisica = new Rectangle(
+                (int) (bounds.x * scaleX), (int) (bounds.y * scaleY),
+                (int) (bounds.width * scaleX), (int) (bounds.height * scaleY));
+
+        return robot.createScreenCapture(areaFisica);
+    }
+
     // ── Transferable interno ──────────────────────────────
     private static class TransferableImage implements Transferable {
         private final java.awt.Image imagen;
-        TransferableImage(java.awt.Image img) { this.imagen = img; }
 
-        @Override public DataFlavor[] getTransferDataFlavors() {
-            return new DataFlavor[]{DataFlavor.imageFlavor};
+        TransferableImage(java.awt.Image img) {
+            this.imagen = img;
         }
-        @Override public boolean isDataFlavorSupported(DataFlavor f) {
+
+        @Override
+        public DataFlavor[] getTransferDataFlavors() {
+            return new DataFlavor[] { DataFlavor.imageFlavor };
+        }
+
+        @Override
+        public boolean isDataFlavorSupported(DataFlavor f) {
             return DataFlavor.imageFlavor.equals(f);
         }
-        @Override public Object getTransferData(DataFlavor f) throws UnsupportedFlavorException {
-            if (!isDataFlavorSupported(f)) throw new UnsupportedFlavorException(f);
+
+        @Override
+        public Object getTransferData(DataFlavor f) throws UnsupportedFlavorException {
+            if (!isDataFlavorSupported(f))
+                throw new UnsupportedFlavorException(f);
             return imagen;
         }
     }

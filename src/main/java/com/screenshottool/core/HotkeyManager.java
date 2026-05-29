@@ -6,35 +6,38 @@ import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
 
 /**
- * HotkeyManager - Registra el atajo global Ctrl+Shift+S.
+ * HotkeyManager - Registra atajos globales.
  *
- * Linux: el atajo lo maneja GNOME via gsettings (configurado por instalar.sh)
- * No se crea ninguna ventana oculta — nada aparece en el taskbar.
+ * Linux: atajos manejados por GNOME via gsettings (postinst los configura)
+ *        No se crea ninguna ventana oculta.
  *
- * Windows: usa una JFrame oculta con Timer de re-foco para mantener
- * el atajo activo mientras el usuario trabaja en otras apps.
+ * Windows: ventana oculta con Timer de re-foco.
+ *   Ctrl+Alt+S → captura de área
+ *   Ctrl+Alt+W → captura de ventana activa
  */
 public class HotkeyManager {
 
-    private final Runnable onCapturar;
+    private final Runnable onCapturarArea;
+    private final Runnable onCapturarVentana;
     private javax.swing.JFrame ventanaOculta;
 
-    public HotkeyManager(Runnable onCapturar) {
-        this.onCapturar = onCapturar;
+    public HotkeyManager(Runnable onCapturarArea, Runnable onCapturarVentana) {
+        this.onCapturarArea    = onCapturarArea;
+        this.onCapturarVentana = onCapturarVentana;
     }
 
-    // ── Inicializar atajo ─────────────────────────────────
+    // ── Inicializar ───────────────────────────────────────
     public void iniciar() {
         String os = System.getProperty("os.name").toLowerCase();
         if (os.contains("linux")) {
-            System.out.println("[HotkeyManager] Linux: hotkey managed by GNOME gsettings");
+            System.out.println("[HotkeyManager] Linux: hotkeys managed by GNOME gsettings");
             return;
         }
 
-        // Windows: registrar atajo via ventana oculta
+        // Windows: ventana oculta con dos atajos
         javax.swing.SwingUtilities.invokeLater(() -> {
-            ventanaOculta = crearVentanaOculta(); // ← ahora asigna al campo
-            registrarAtajo(ventanaOculta);
+            ventanaOculta = crearVentanaOculta();
+            registrarAtajos(ventanaOculta);
             iniciarTimerFoco(ventanaOculta);
         });
     }
@@ -52,20 +55,31 @@ public class HotkeyManager {
         return frame;
     }
 
-    // ── Registrar Ctrl+Shift+S ────────────────────────────
-    private void registrarAtajo(javax.swing.JFrame frame) {
-        javax.swing.KeyStroke atajo = javax.swing.KeyStroke.getKeyStroke(
-                KeyEvent.VK_S,
-                InputEvent.CTRL_DOWN_MASK | InputEvent.ALT_DOWN_MASK);
-
+    // ── Registrar Ctrl+Alt+S y Ctrl+Alt+W ────────────────
+    private void registrarAtajos(javax.swing.JFrame frame) {
+        // Ctrl+Alt+S → captura de área
+        javax.swing.KeyStroke atajoArea = javax.swing.KeyStroke.getKeyStroke(
+                KeyEvent.VK_S, InputEvent.CTRL_DOWN_MASK | InputEvent.ALT_DOWN_MASK);
         frame.getRootPane()
                 .getInputMap(javax.swing.JComponent.WHEN_IN_FOCUSED_WINDOW)
-                .put(atajo, "capturar");
-
+                .put(atajoArea, "capturarArea");
         frame.getRootPane().getActionMap()
-                .put("capturar", new javax.swing.AbstractAction() {
+                .put("capturarArea", new javax.swing.AbstractAction() {
                     public void actionPerformed(java.awt.event.ActionEvent e) {
-                        Platform.runLater(onCapturar);
+                        Platform.runLater(onCapturarArea);
+                    }
+                });
+
+        // Ctrl+Alt+W → captura de ventana activa
+        javax.swing.KeyStroke atajoVentana = javax.swing.KeyStroke.getKeyStroke(
+                KeyEvent.VK_W, InputEvent.CTRL_DOWN_MASK | InputEvent.ALT_DOWN_MASK);
+        frame.getRootPane()
+                .getInputMap(javax.swing.JComponent.WHEN_IN_FOCUSED_WINDOW)
+                .put(atajoVentana, "capturarVentana");
+        frame.getRootPane().getActionMap()
+                .put("capturarVentana", new javax.swing.AbstractAction() {
+                    public void actionPerformed(java.awt.event.ActionEvent e) {
+                        Platform.runLater(onCapturarVentana);
                     }
                 });
     }
@@ -75,7 +89,6 @@ public class HotkeyManager {
         javax.swing.Timer timer = new javax.swing.Timer(800, e -> {
             Window focusedWindow = KeyboardFocusManager
                     .getCurrentKeyboardFocusManager().getFocusedWindow();
-            // No robar foco si hay una ventana JavaFX activa
             if (focusedWindow == null && !hayDialogoActivo()) {
                 frame.toFront();
                 frame.requestFocus();

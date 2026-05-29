@@ -1,0 +1,140 @@
+#!/bin/bash
+# ═══════════════════════════════════════════════════════════
+#  Screenshot Tool - Post-installation script
+#  Ejecutado automáticamente por dpkg al instalar el .deb
+#
+#  Configura:
+#    - Atajos globales de GNOME (Ctrl+Alt+S y Ctrl+Alt+W)
+#    - StartupWMClass para ícono correcto en GNOME/Wayland
+#    - Lanza la app como el usuario actual
+# ═══════════════════════════════════════════════════════════
+
+set -e
+
+APP_BINARY="/opt/screenshot-tool/bin/screenshot-tool"
+DESKTOP_FILE="/usr/share/applications/screenshot-tool-screenshot-tool.desktop"
+
+# ── Detectar usuario actual (no root) ────────────────────
+get_current_user() {
+    # logname falla en algunos entornos de instalación
+    if [ -n "$SUDO_USER" ]; then
+        echo "$SUDO_USER"
+    elif [ -n "$DBUS_SESSION_BUS_ADDRESS" ]; then
+        whoami
+    else
+        # Buscar usuario con sesión gráfica activa
+        who | grep -E ":[0-9]" | head -1 | awk '{print $1}'
+    fi
+}
+
+CURRENT_USER=$(get_current_user)
+
+if [ -z "$CURRENT_USER" ] || [ "$CURRENT_USER" = "root" ]; then
+    echo "[postinst] No se pudo detectar el usuario. Configura los atajos manualmente."
+    exit 0
+fi
+
+USER_HOME=$(getent passwd "$CURRENT_USER" | cut -d: -f6)
+USER_ID=$(id -u "$CURRENT_USER")
+export DBUS_SESSION_BUS_ADDRESS="unix:path=/run/user/$USER_ID/bus"
+
+echo "[postinst] Configurando para usuario: $CURRENT_USER"
+
+# ── Agregar StartupWMClass al .desktop ───────────────────
+# Necesario para que GNOME asocie la ventana JavaFX
+# con el launcher y muestre el ícono correcto
+if [ -f "$DESKTOP_FILE" ]; then
+    if ! grep -q "StartupWMClass" "$DESKTOP_FILE"; then
+        echo "StartupWMClass=com.screenshottool.ScreenshotApp" >> "$DESKTOP_FILE"
+        echo "[postinst] StartupWMClass agregado al .desktop"
+    fi
+    # Actualizar caché de aplicaciones
+    update-desktop-database /usr/share/applications 2>/dev/null || true
+fi
+
+# ── Configurar atajos de GNOME ────────────────────────────
+configure_hotkeys() {
+    local USER=$1
+    local USER_HOME=$2
+    local DBUS=$3
+
+    export DBUS_SESSION_BUS_ADDRESS="$DBUS"
+
+    BINDING_BASE="/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings"
+    BINDING_AREA="$BINDING_BASE/screenshot-area/"
+    BINDING_WIN="$BINDING_BASE/screenshot-window/"
+
+    # Obtener lista actual de keybindings
+    CURRENT=$(sudo -u "$USER" DBUS_SESSION_BUS_ADDRESS="$DBUS" \
+        gsettings get org.gnome.settings-daemon.plugins.media-keys \
+        custom-keybindings 2>/dev/null || echo "@as []")
+
+    # Construir nueva lista incluyendo ambos bindings
+    NEW_LIST="['$BINDING_AREA', '$BINDING_WIN']"
+
+    # Si ya había otros bindings, preservarlos
+    if [ "$CURRENT" != "@as []" ] && [ "$CURRENT" != "[]" ]; then
+        # Remover entradas previas de screenshot-tool si existen
+        CLEAN=$(echo "$CURRENT" | sed "s|'$BINDING_AREA', ||g;s|, '$BINDING_AREA'||g")
+        CLEAN=$(echo "$CLEAN"   | sed "s|'$BINDING_WIN', ||g;s|, '$BINDING_WIN'||g")
+        # Agregar las nuevas
+        NEW_LIST=$(echo "$CLEAN" | sed "s|]$|, '$BINDING_AREA', '$BINDING_WIN']|")
+    fi
+
+    # Aplicar lista
+    sudo -u "$USER" DBUS_SESSION_BUS_ADDRESS="$DBUS" \
+        gsettings set org.gnome.settings-daemon.plugins.media-keys \
+        custom-keybindings "$NEW_LIST" 2>/dev/null || true
+
+    # ── Ctrl+Alt+S → captura de área ─────────────────────
+    sudo -u "$USER" DBUS_SESSION_BUS_ADDRESS="$DBUS" \
+        gsettings set \
+        org.gnome.settings-daemon.plugins.media-keys.custom-keybinding:$BINDING_AREA \
+        name "Screenshot Tool - Area" 2>/dev/null || true
+
+    sudo -u "$USER" DBUS_SESSION_BUS_ADDRESS="$DBUS" \
+        gsettings set \
+        org.gnome.settings-daemon.plugins.media-keys.custom-keybinding:$BINDING_AREA \
+        command "bash -c 'pgrep -x screenshot-tool > /dev/null || $APP_BINARY & sleep 0.5; touch /tmp/screenshottool.trigger'" \
+        2>/dev/null || true
+
+    sudo -u "$USER" DBUS_SESSION_BUS_ADDRESS="$DBUS" \
+        gsettings set \
+        org.gnome.settings-daemon.plugins.media-keys.custom-keybinding:$BINDING_AREA \
+        binding "<Control><Alt>s" 2>/dev/null || true
+
+    # ── Ctrl+Alt+W → captura de ventana activa ───────────
+    sudo -u "$USER" DBUS_SESSION_BUS_ADDRESS="$DBUS" \
+        gsettings set \
+        org.gnome.settings-daemon.plugins.media-keys.custom-keybinding:$BINDING_WIN \
+        name "Screenshot Tool - Window" 2>/dev/null || true
+
+    sudo -u "$USER" DBUS_SESSION_BUS_ADDRESS="$DBUS" \
+        gsettings set \
+        org.gnome.settings-daemon.plugins.media-keys.custom-keybinding:$BINDING_WIN \
+        command "bash -c 'pgrep -x screenshot-tool > /dev/null || $APP_BINARY & sleep 0.5; touch /tmp/screenshottool.trigger.window'" \
+        2>/dev/null || true
+
+    sudo -u "$USER" DBUS_SESSION_BUS_ADDRESS="$DBUS" \
+        gsettings set \
+        org.gnome.settings-daemon.plugins.media-keys.custom-keybinding:$BINDING_WIN \
+        binding "<Control><Alt>w" 2>/dev/null || true
+
+    echo "[postinst] Atajos configurados: Ctrl+Alt+S (área) y Ctrl+Alt+W (ventana)"
+}
+
+configure_hotkeys "$CURRENT_USER" "$USER_HOME" "$DBUS_SESSION_BUS_ADDRESS"
+
+# ── Lanzar la app como el usuario actual ─────────────────
+# Sin activar captura — solo quedar en la bandeja esperando
+echo "[postinst] Lanzando Screenshot Tool..."
+sudo -u "$CURRENT_USER" \
+    DISPLAY=:0 \
+    DBUS_SESSION_BUS_ADDRESS="unix:path=/run/user/$USER_ID/bus" \
+    nohup "$APP_BINARY" > /dev/null 2>&1 &
+
+echo "[postinst] Screenshot Tool instalado correctamente."
+echo "[postinst]   Ctrl+Alt+S → captura de área"
+echo "[postinst]   Ctrl+Alt+W → captura de ventana activa"
+
+exit 0
