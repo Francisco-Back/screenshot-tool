@@ -1,6 +1,6 @@
 # Screenshot Tool
 
-A lightweight screen capture tool for Linux and Windows built with Java 21 and JavaFX. Lives in the system tray and captures screen areas with a global keyboard shortcut.
+A lightweight screen capture tool for Linux and Windows built with Java 21 and JavaFX. Lives in the system tray and captures screen areas with global keyboard shortcuts.
 
 ![Java](https://img.shields.io/badge/Java-21-orange)
 ![JavaFX](https://img.shields.io/badge/JavaFX-21-blue)
@@ -13,9 +13,13 @@ A lightweight screen capture tool for Linux and Windows built with Java 21 and J
 ## Features
 
 - **System tray** integration — runs silently in the background
-- **Global hotkey** `Ctrl+Alt+S` to trigger capture (configurable on Windows)
+- **Two global hotkeys:**
+  - `Ctrl+Alt+S` → area selection capture
+  - `Ctrl+Alt+W` → active window capture
 - **Area selection** with visual overlay, blue border, corner markers and ✕ cancel button
+- **Active window capture** — instantly captures the focused window without manual selection
 - **Multi-monitor** support — covers all screens simultaneously with screen labels
+- **Single JVM instance** — trigger file system prevents multiple processes accumulating in memory
 - **Native capture backends** with automatic fallback:
   - `gnome-screenshot` → GNOME/Wayland/VirtualBox with Guest Additions
   - `scrot` → X11, works in VirtualBox without Guest Additions
@@ -29,9 +33,9 @@ A lightweight screen capture tool for Linux and Windows built with Java 21 and J
   - Filename input with timestamp default (`captura_2026-05-24_13-04-01`)
   - Format selector: `png`, `jpg`, `bmp`, `gif`
   - Folder selector (remembers last used, defaults to `~/Pictures`)
-  - Toast notification after saving with "Open file" button (auto-closes in 4s)
-- **Dark/light mode** — automatically adapts to system theme
-- **Trigger file** support — send capture command to running instance via `/tmp/screenshottool.trigger`
+  - Toast notification after saving with "Open file" and "Show in folder" buttons (auto-closes in 4s)
+  - Internal keyboard shortcuts: `Ctrl+S` save, `Ctrl+C` copy, `ESC` close, `Delete/F2` clear filename
+- **Dark/light mode** — automatically adapts to system theme (Windows registry, Linux gsettings)
 
 ---
 
@@ -40,52 +44,69 @@ A lightweight screen capture tool for Linux and Windows built with Java 21 and J
 | Feature | Linux (GNOME) | Windows |
 |---|---|---|
 | Area selector | ✅ | ✅ |
+| Active window capture | ✅ xdotool/scrot | ✅ Robot |
 | Save dialog | ✅ | ✅ |
 | Clipboard | ✅ | ✅ |
 | Dark/light theme | ✅ | ✅ |
 | System tray | ✅ | ✅ |
 | HiDPI capture | ✅ | ✅ |
-| Global hotkey | ✅ GNOME gsettings | ✅ Windows shortcut |
-| Custom hotkey | ✅ | ✅ |
+| `Ctrl+Alt+S` hotkey | ✅ GNOME gsettings | ✅ HotkeyManager |
+| `Ctrl+Alt+W` hotkey | ✅ GNOME gsettings | ✅ HotkeyManager |
 | `gnome-screenshot` backend | ✅ | ❌ |
 | `scrot` / `xwd` backend | ✅ | ❌ |
 | `Robot` backend | ✅ | ✅ |
-| `screenshot` command | ✅ | ✅ |
-| Installer script | ✅ `.sh` | ✅ `.bat` |
+| Single JVM instance | ✅ trigger file | ✅ HotkeyManager |
+| Native installer | ✅ `.deb` (jpackage) | ✅ `.bat` |
 
 ---
 
 ## Requirements
 
+### Linux
+- Java 21+ (included in `.deb`)
+- JavaFX 21+ (included in `.deb`)
+- `xdotool` for active window capture (optional, auto-installed)
+
+### Windows
 - Java 21+
 - Maven 3.6+
-- Linux (GNOME recommended) or Windows 10+
 
 ---
 
-## Installation (Linux)
+## Installation (Linux) — recommended
 
 ```bash
 git clone https://github.com/Francisco-Back/screenshot-tool.git
-cd screenshot-tool/installers/linux
-bash instalar.sh
+cd screenshot-tool
+sudo dpkg -i installers/linux/screenshot-tool_2.0.0_amd64.deb
 ```
 
-The installer automatically:
-- Installs Java 21, JavaFX (openjfx), Maven, gnome-screenshot and scrot if missing
-- Detects VirtualBox and shows Guest Additions recommendation
-- Builds the project with Maven
-- Installs the app to `~/.local/share/screenshot-tool/`
-- Creates a `.desktop` entry in the application menu
-- Configures autostart on login
-- Registers the `screenshot` terminal command
-- Configures the `Ctrl+Alt+S` hotkey in GNOME
+The `.deb` automatically:
+- Installs the app with JRE and JavaFX embedded (no Java required)
+- Configures `Ctrl+Alt+S` and `Ctrl+Alt+W` hotkeys in GNOME
+- Sets `StartupWMClass` so the correct icon appears in taskbar and dock
+- Launches the app in the system tray
 
-## Uninstall (Linux)
+### Uninstall (Linux)
 
 ```bash
-bash installers/linux/uninstall.sh
+sudo dpkg -r screenshot-tool
 ```
+
+The uninstaller automatically removes GNOME hotkeys and stops the running process.
+
+---
+
+## Build .deb from source (Linux)
+
+```bash
+git clone https://github.com/Francisco-Back/screenshot-tool.git
+cd screenshot-tool
+bash installers/linux/build-deb.sh
+sudo dpkg -i installers/linux/screenshot-tool_2.0.0_amd64.deb
+```
+
+Requirements for building: `java 21`, `maven`, `fakeroot`, `binutils`
 
 ---
 
@@ -100,13 +121,13 @@ The installer automatically:
 - Verifies Java and Maven installation
 - Builds the project with Maven
 - Installs to `%LOCALAPPDATA%\screenshot-tool\`
-- Creates Start Menu shortcut with global hotkey (choose `Ctrl+Alt+S` or custom)
+- Creates Start Menu shortcut with `Ctrl+Alt+S` hotkey (or custom)
 - Configures autostart on login via Startup folder
 - Creates global `screenshot` command in `%USERPROFILE%\bin\`
 
 > **Note:** Log out and back in after installing for the hotkey to activate.
 
-## Uninstall (Windows)
+### Uninstall (Windows)
 
 ```batch
 installers\windows\uninstall.bat
@@ -116,24 +137,23 @@ installers\windows\uninstall.bat
 
 ## Usage
 
-### First run
-```bash
-# Linux
-screenshot
+### Capture area
+- Press `Ctrl+Alt+S`
+- Drag to select the area
+- Press `ESC` or click `✕` to cancel
 
-# Windows
-screenshot
-```
-Launches the app in the background. The tray icon appears in the system tray.
+### Capture active window
+- Press `Ctrl+Alt+W`
+- The focused window is captured instantly — no selection needed
 
-### Capture
-- Press `Ctrl+Alt+S` (or your custom hotkey)
-- Or run `screenshot` from terminal (triggers capture if already running)
-- Or click the tray icon → **Capture area**
-
-### Cancel selection
-- Press `ESC` (Linux)
-- Click the `✕` button (top-right corner of the overlay, works on both platforms)
+### Save dialog shortcuts
+| Shortcut | Action |
+|---|---|
+| `Ctrl+S` | Save file |
+| `Ctrl+C` | Copy to clipboard |
+| `ESC` | Close dialog |
+| `Delete` / `F2` | Clear filename and focus input |
+| `Enter` | Save file |
 
 ---
 
@@ -156,18 +176,24 @@ Without Guest Additions, `scrot` or `xwd` will be used automatically as fallback
 # Run in development mode
 mvn javafx:run
 
-# Build JAR
+# Build JAR only
 mvn clean package
+
+# Build .deb (Linux)
+bash installers/linux/build-deb.sh
 ```
 
 ### Project structure
 
 ```
 screenshot-tool/
+├── assets/                         # Icons and resources
 ├── installers/
 │   ├── linux/
-│   │   ├── instalar.sh             # Linux installer
-│   │   └── uninstall.sh            # Linux uninstaller
+│   │   ├── build-deb.sh            # Builds .deb with jpackage
+│   │   ├── postinst                # Runs after dpkg install
+│   │   ├── postrm                  # Runs after dpkg remove
+│   │   └── uninstall.sh            # Manual uninstaller
 │   └── windows/
 │       ├── instalar.bat            # Windows installer
 │       └── uninstall.bat           # Windows uninstaller
@@ -177,15 +203,16 @@ screenshot-tool/
     ├── java/com/screenshottool/
     │   ├── ScreenshotApp.java              # JavaFX entry point
     │   ├── core/
-    │   │   ├── AppContext.java             # Main orchestrator
+    │   │   ├── AppContext.java             # Main orchestrator + trigger monitor
     │   │   ├── TrayManager.java            # System tray icon and menu
-    │   │   ├── HotkeyManager.java          # Hotkey (Windows) / GNOME trigger (Linux)
-    │   │   └── SelectorDeAreaBridge.java   # Swing area selector
+    │   │   ├── HotkeyManager.java          # Ctrl+Alt+S and Ctrl+Alt+W (Windows)
+    │   │   └── SelectorDeAreaBridge.java   # Swing area selector (Robot fallback)
     │   ├── controller/
     │   │   ├── ScreenshotController.java   # Save dialog controller
     │   │   └── FolderPickerController.java # Folder picker controller
     │   ├── service/
-    │   │   └── ScreenshotService.java      # Capture backends, clipboard, save
+    │   │   ├── ScreenshotService.java      # Capture backends, clipboard, save
+    │   │   └── ToastService.java           # Fluent Design toast notification
     │   └── model/
     │       └── CapturaModel.java           # Data model with JavaFX properties
     └── resources/com/screenshottool/
@@ -200,24 +227,25 @@ screenshot-tool/
 
 ## How the trigger system works
 
-The `screenshot` command avoids launching multiple instances via a file-based trigger:
+The trigger file system ensures only one JVM instance runs at a time:
 
 **Linux:**
 ```
-screenshot (1st run)  → launches app in background
-screenshot (2nd run)  → creates /tmp/screenshottool.trigger
-                      → AppContext detects it within 300ms
-                      → triggers capture immediately
+Ctrl+Alt+S (1st press)  → app not running → launches JVM → stays in tray
+Ctrl+Alt+S (2nd press)  → app running → touch /tmp/screenshottool.trigger
+                        → AppContext detects within 300ms → area capture
+
+Ctrl+Alt+W              → touch /tmp/screenshottool.trigger.window
+                        → AppContext detects within 300ms → window capture
 ```
 
 **Windows:**
 ```
-screenshot (1st run)  → launches app in background
-screenshot (2nd run)  → detects running instance via tasklist
-                      → shows message: use hotkey to capture
+Ctrl+Alt+S → HotkeyManager intercepts → calls iniciarCaptura() directly
+Ctrl+Alt+W → HotkeyManager intercepts → calls iniciarCapturaVentana() directly
 ```
 
-The app stays running in the tray for the entire session — no need to relaunch it.
+No new JVM is ever created after the first launch — memory stays constant.
 
 ---
 
