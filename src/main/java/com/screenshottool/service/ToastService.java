@@ -234,4 +234,62 @@ public class ToastService {
         header.setPadding(new Insets(10, 12, 8, 12));
         return header;
     }
+
+
+    // ── Toast pequeño tipo burbuja (para Ctrl+C, etc) ────────
+public void mostrarMensaje(String mensaje) {
+    // Quitar mensaje previo si existe
+    if (wrapperActual != null) {
+        rootPane.getChildren().remove(wrapperActual);
+        wrapperActual = null;
+    }
+
+    Label lbl = new Label(mensaje);
+    lbl.getStyleClass().add("toast-bubble-label");
+    lbl.setPadding(new javafx.geometry.Insets(6, 16, 6, 16));
+
+    VBox bubble = new VBox(lbl);
+    bubble.getStyleClass().add("toast-bubble");
+    bubble.setAlignment(javafx.geometry.Pos.CENTER);
+
+    // Centrar horizontalmente en la parte superior
+    Region hSpacerL = new Region();
+    Region hSpacerR = new Region();
+    HBox.setHgrow(hSpacerL, Priority.ALWAYS);
+    HBox.setHgrow(hSpacerR, Priority.ALWAYS);
+    hSpacerL.setPickOnBounds(false);
+    hSpacerR.setPickOnBounds(false);
+
+    HBox hRow = new HBox(hSpacerL, bubble, hSpacerR);
+    hRow.setPickOnBounds(false);
+
+    VBox wrapper = new VBox(hRow);
+    wrapper.setPickOnBounds(false);
+    wrapper.setPadding(new javafx.geometry.Insets(12, 0, 0, 0));
+    wrapper.setMaxWidth(Double.MAX_VALUE);
+    wrapper.setMaxHeight(Double.MAX_VALUE);
+
+    rootPane.getChildren().add(wrapper);
+    wrapperActual = wrapper;
+
+    // Animación entrada
+    bubble.setOpacity(0);
+    bubble.setTranslateY(-8);
+    FadeTransition fadeIn = new FadeTransition(Duration.millis(180), bubble);
+    fadeIn.setFromValue(0); fadeIn.setToValue(1);
+    TranslateTransition slideIn = new TranslateTransition(Duration.millis(180), bubble);
+    slideIn.setFromY(-8); slideIn.setToY(0);
+    new ParallelTransition(fadeIn, slideIn).play();
+
+    // Auto-cerrar en 1.5s
+    PauseTransition pause = new PauseTransition(Duration.seconds(1.5));
+    pause.setOnFinished(e -> {
+        FadeTransition fadeOut = new FadeTransition(Duration.millis(160), bubble);
+        fadeOut.setFromValue(1); fadeOut.setToValue(0);
+        fadeOut.setOnFinished(ev -> rootPane.getChildren().remove(wrapper));
+        fadeOut.play();
+        wrapperActual = null;
+    });
+    pause.play();
+}
 }

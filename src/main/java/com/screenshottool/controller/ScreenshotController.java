@@ -26,9 +26,9 @@ import java.util.ResourceBundle;
  * ScreenshotController — diálogo principal (main.fxml)
  *
  * Responsabilidades:
- *   - Mostrar preview, nombre, formato, carpeta
- *   - Guardar / copiar / cancelar
- *   - Delegar el toast a ToastService
+ * - Mostrar preview, nombre, formato, carpeta
+ * - Guardar / copiar / cancelar
+ * - Delegar el toast a ToastService
  *
  * El nodo raíz del FXML debe ser <StackPane fx:id="rootPane">
  * para que ToastService pueda inyectar el overlay.
@@ -36,24 +36,34 @@ import java.util.ResourceBundle;
 public class ScreenshotController implements Initializable {
 
     // ── FXML bindings ─────────────────────────────────────────
-    @FXML private StackPane   rootPane;       // raíz = StackPane (requerido por ToastService)
-    @FXML private ImageView   imgPreview;
-    @FXML private Label       lblDimensiones;
-    @FXML private TextField   txtNombre;
-    @FXML private ComboBox<String> cmbFormato;
-    @FXML private Label       lblCarpeta;
-    @FXML private Button      btnGuardar;
-    @FXML private Button      btnCopiar;
-    @FXML private Button      btnCancelar;
-    @FXML private Label       lblEstado;
+    @FXML
+    private StackPane rootPane; // raíz = StackPane (requerido por ToastService)
+    @FXML
+    private ImageView imgPreview;
+    @FXML
+    private Label lblDimensiones;
+    @FXML
+    private TextField txtNombre;
+    @FXML
+    private ComboBox<String> cmbFormato;
+    @FXML
+    private Label lblCarpeta;
+    @FXML
+    private Button btnGuardar;
+    @FXML
+    private Button btnCopiar;
+    @FXML
+    private Button btnCancelar;
+    @FXML
+    private Label lblEstado;
 
     // ── Dependencias ──────────────────────────────────────────
-    private CapturaModel      modelo;
+    private CapturaModel modelo;
     private ScreenshotService servicio;
-    private BufferedImage     imagenOriginal;
-    private Stage             stage;
-    //private Runnable          onCancelar;
-    private ToastService      toastService;   // ← delegado para el toast
+    private BufferedImage imagenOriginal;
+    private Stage stage;
+    // private Runnable onCancelar;
+    private ToastService toastService; // ← delegado para el toast
 
     // ── Initializable ─────────────────────────────────────────
     @Override
@@ -69,12 +79,12 @@ public class ScreenshotController implements Initializable {
 
     // ── Inyección desde ScreenshotApp ─────────────────────────
     public void init(CapturaModel modelo, ScreenshotService servicio,
-                     BufferedImage imagenOriginal, Stage stage, Runnable onCancelar) {
-        this.modelo         = modelo;
-        this.servicio       = servicio;
+            BufferedImage imagenOriginal, Stage stage, Runnable onCancelar) {
+        this.modelo = modelo;
+        this.servicio = servicio;
         this.imagenOriginal = imagenOriginal;
-        this.stage          = stage;
-        //this.onCancelar     = onCancelar;
+        this.stage = stage;
+        // this.onCancelar = onCancelar;
 
         // ToastService se crea aquí, cuando ya tenemos rootPane + stage + servicio
         this.toastService = new ToastService(rootPane, stage, servicio);
@@ -91,15 +101,15 @@ public class ScreenshotController implements Initializable {
         imgPreview.setFitHeight(260);
 
         lblDimensiones.setText(
-            modelo.getAnchoReal() + " × " + modelo.getAltoReal()
-            + " px  —  Ya copiado al portapapeles");
+                modelo.getAnchoReal() + " × " + modelo.getAltoReal()
+                        + " px  —  Ya copiado al portapapeles");
 
         txtNombre.textProperty().bindBidirectional(modelo.nombreProperty());
         cmbFormato.valueProperty().bindBidirectional(modelo.formatoProperty());
 
         actualizarLblCarpeta();
         modelo.carpetaDestinoProperty().addListener(
-            (obs, old, nueva) -> actualizarLblCarpeta());
+                (obs, old, nueva) -> actualizarLblCarpeta());
 
         Platform.runLater(() -> {
             txtNombre.requestFocus();
@@ -120,7 +130,7 @@ public class ScreenshotController implements Initializable {
 
     private void autocopiarPortapapeles() {
         javax.swing.SwingUtilities.invokeLater(
-            () -> servicio.copiarAlPortapapeles(imagenOriginal));
+                () -> servicio.copiarAlPortapapeles(imagenOriginal));
     }
 
     // ── Acciones FXML ────────────────────────────────────────
@@ -150,7 +160,7 @@ public class ScreenshotController implements Initializable {
             File guardado = servicio.guardarImagen(imagenOriginal, modelo);
             mostrarEstado("Guardado: " + guardado.getName(), false);
             btnGuardar.setDisable(true);
-            toastService.mostrar(guardado);   // ← una línea, sin lógica de UI aquí
+            toastService.mostrar(guardado); // ← una línea, sin lógica de UI aquí
         } catch (IOException ex) {
             mostrarEstado("Error: " + ex.getMessage(), true);
         }
@@ -160,7 +170,7 @@ public class ScreenshotController implements Initializable {
     private void onCopiar() {
         new Thread(() -> {
             servicio.copiarAlPortapapeles(imagenOriginal);
-            Platform.runLater(() -> mostrarEstado("Copiado al portapapeles", false));
+            Platform.runLater(() -> toastService.mostrarMensaje("📋 Copiado al portapapeles"));
         }).start();
     }
 
@@ -168,7 +178,7 @@ public class ScreenshotController implements Initializable {
     private void onCambiarCarpeta() {
         try {
             FXMLLoader loader = new FXMLLoader(
-                getClass().getResource("/com/screenshottool/fxml/folder-picker.fxml"));
+                    getClass().getResource("/com/screenshottool/fxml/folder-picker.fxml"));
             Parent root = loader.load();
 
             FolderPickerController picker = loader.getController();
@@ -195,15 +205,15 @@ public class ScreenshotController implements Initializable {
             // Calcular posición ANTES de show() — el stage aún no tiene
             // tamaño, así que usamos showAndWait() con un listener de una sola vez.
             pickerStage.setOnShown(e -> {
-                double cx = stage.getX() + (stage.getWidth()  - pickerStage.getWidth())  / 2;
+                double cx = stage.getX() + (stage.getWidth() - pickerStage.getWidth()) / 2;
                 double cy = stage.getY() + (stage.getHeight() - pickerStage.getHeight()) / 2;
 
                 // Obtener bounds de la pantalla donde está el stage principal
                 javafx.stage.Screen pantalla = javafx.stage.Screen
-                    .getScreensForRectangle(stage.getX(), stage.getY(),
-                                            stage.getWidth(), stage.getHeight())
-                    .stream().findFirst()
-                    .orElse(javafx.stage.Screen.getPrimary());
+                        .getScreensForRectangle(stage.getX(), stage.getY(),
+                                stage.getWidth(), stage.getHeight())
+                        .stream().findFirst()
+                        .orElse(javafx.stage.Screen.getPrimary());
 
                 javafx.geometry.Rectangle2D bounds = pantalla.getVisualBounds();
 
@@ -232,46 +242,54 @@ public class ScreenshotController implements Initializable {
     private void mostrarEstado(String texto, boolean esError) {
         lblEstado.setText(texto);
         lblEstado.setStyle(esError
-            ? "-fx-text-fill: #e74c3c;"
-            : "-fx-text-fill: derive(-fx-text-base-color, 30%);");
+                ? "-fx-text-fill: #e74c3c;"
+                : "-fx-text-fill: derive(-fx-text-base-color, 30%);");
     }
 
-// ── Atajos internos del diálogo ───────────────────────────
-private void registrarAtajosTeclado() {
-    rootPane.sceneProperty().addListener((obs, oldScene, newScene) -> {
-        if (newScene == null) return;
+    private void registrarAtajosTeclado() {
+        Platform.runLater(() -> {
+            Scene scene = rootPane.getScene();
+            if (scene == null)
+                return;
 
-        // Ctrl+S → guardar
-        newScene.getAccelerators().put(
-            javafx.scene.input.KeyCombination.keyCombination("Ctrl+S"),
-            this::onGuardar
-        );
+            // Ctrl+S → guardar
+            scene.getAccelerators().put(
+                    javafx.scene.input.KeyCombination.keyCombination("Ctrl+S"),
+                    this::onGuardar);
 
-        // ESC → cerrar diálogo
-        newScene.getAccelerators().put(
-            javafx.scene.input.KeyCombination.keyCombination("ESC"),
-            this::onCancelar
-        );
+            // ESC → cerrar diálogo
+            scene.getAccelerators().put(
+                    javafx.scene.input.KeyCombination.keyCombination("ESC"),
+                    this::onCancelar);
 
-        // Ctrl+C → copiar (solo si el foco NO está en el campo de texto)
-        newScene.addEventFilter(javafx.scene.input.KeyEvent.KEY_PRESSED, e -> {
-            if (e.isControlDown() && e.getCode() == javafx.scene.input.KeyCode.C
-                    && !txtNombre.isFocused()) {
-                onCopiar();
-                e.consume();
-            }
-        });
+            // Ctrl+C → copiar (solo si el foco NO está en el campo de texto)
+            scene.addEventFilter(javafx.scene.input.KeyEvent.KEY_PRESSED, e -> {
+                if (e.isControlDown() && e.getCode() == javafx.scene.input.KeyCode.C
+                        && !txtNombre.isFocused()) {
+                    onCopiar();
+                    e.consume();
+                }
+            });
 
-        // Delete o F2 → limpiar nombre y poner foco
-        newScene.addEventFilter(javafx.scene.input.KeyEvent.KEY_PRESSED, e -> {
-            boolean esDelete = e.getCode() == javafx.scene.input.KeyCode.DELETE;
-            boolean esF2     = e.getCode() == javafx.scene.input.KeyCode.F2;
-            if ((esDelete || esF2) && !txtNombre.isFocused()) {
-                txtNombre.clear();
-                txtNombre.requestFocus();
-                e.consume();
-            }
-        });
-    });
-}
+            // Delete → limpiar nombre completo
+            scene.addEventFilter(javafx.scene.input.KeyEvent.KEY_PRESSED, e -> {
+                if (e.getCode() == javafx.scene.input.KeyCode.DELETE
+                        && !txtNombre.isFocused()) {
+                    txtNombre.clear();
+                    txtNombre.requestFocus();
+                    e.consume();
+                }
+            });
+
+            // F2 → poner foco en nombre para editar
+            scene.addEventFilter(javafx.scene.input.KeyEvent.KEY_PRESSED, e -> {
+                if (e.getCode() == javafx.scene.input.KeyCode.F2) {
+                    txtNombre.requestFocus();
+                    txtNombre.selectAll();
+                    e.consume();
+                }
+            });
+
+        }); // ← cierre del Platform.runLater
+    }
 }
