@@ -11,7 +11,6 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
-
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
@@ -22,13 +21,13 @@ import java.io.File;
  * AppContext - Orquesta el flujo principal de la aplicación.
  *
  * Triggers:
- *   /tmp/screenshottool.trigger        → captura de área (selector)
- *   /tmp/screenshottool.trigger.window → captura de ventana activa
+ * /tmp/screenshottool.trigger        → captura de área (selector)
+ * /tmp/screenshottool.trigger.window → captura de monitor activo
  *
  * Ciclo de vida:
- *   App inicia → bandeja → monitor trigger activo → espera
- *   Trigger detectado → captura → diálogo → cierra diálogo → vuelve a esperar
- *   La JVM nunca cierra hasta que el usuario elige "Salir" en la bandeja
+ * App inicia → bandeja → monitor trigger activo → espera
+ * Trigger detectado → captura → diálogo → cierra diálogo → vuelve a esperar
+ * La JVM nunca cierra hasta que el usuario elige "Salir" en la bandeja
  */
 public class AppContext {
 
@@ -38,13 +37,12 @@ public class AppContext {
     private Stage dialogoActual = null;
     private boolean dialogoCargando = false;
 
-    // Triggers
     private static final File TRIGGER_AREA   = new File("/tmp/screenshottool.trigger");
     private static final File TRIGGER_WINDOW = new File("/tmp/screenshottool.trigger.window");
 
     public AppContext() {
         this.servicio      = new ScreenshotService();
-        this.trayManager   = new TrayManager(this::iniciarCaptura);
+        this.trayManager   = new TrayManager(this::iniciarCaptura, this::iniciarCapturaVentana);
         this.hotkeyManager = new HotkeyManager(this::iniciarCaptura, this::iniciarCapturaVentana);
     }
 
@@ -60,7 +58,10 @@ public class AppContext {
     }
 
     // ── Captura de área (selector manual) ─────────────────
+    // Linux: gnome-screenshot con selector nativo
+    // Windows: SelectorDeAreaBridge con overlay Swing
     public void iniciarCaptura() {
+        System.out.println("[AppContext] iniciarCaptura() - área");
         cerrarDialogoActual();
 
         new Thread(() -> {
@@ -79,18 +80,40 @@ public class AppContext {
         }).start();
     }
 
-    // ── Captura de ventana activa ─────────────────────────
+    // ── Captura de monitor activo ─────────────────────────
+    // Linux: detecta monitor donde está el cursor y captura con scrot/import
+    // Windows: SelectorVentanaBridge con overlay Swing
     public void iniciarCapturaVentana() {
+        System.out.println("[AppContext] iniciarCapturaVentana() - monitor activo");
         cerrarDialogoActual();
 
         new Thread(() -> {
             try {
-                BufferedImage imagen = servicio.capturarVentanaActiva();
-                if (imagen == null) return;
-                Platform.runLater(() -> mostrarDialogo(imagen));
+                String os = System.getProperty("os.name").toLowerCase();
+                if (os.contains("linux")) {
+                    BufferedImage imagen = servicio.capturarMonitorActivoLinux();
+                    if (imagen == null) return;
+                    Platform.runLater(() -> mostrarDialogo(imagen));
+                } else {
+                    // Windows: selector visual con overlay
+                    Robot robot = new Robot();
+                    GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
+                    Rectangle boundsTotal = new Rectangle();
+                    for (GraphicsDevice gd : ge.getScreenDevices())
+                        boundsTotal = boundsTotal.union(gd.getDefaultConfiguration().getBounds());
+                    BufferedImage fondo = robot.createScreenCapture(boundsTotal);
+                    final BufferedImage f = fondo;
+                    final Rectangle b = boundsTotal;
+                    javax.swing.SwingUtilities.invokeLater(() -> {
+                        try {
+                            new SelectorVentanaBridge(AppContext.this, f, b);
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    });
+                }
             } catch (Exception e) {
                 e.printStackTrace();
-                Platform.runLater(() -> mostrarError("Error al capturar ventana: " + e.getMessage()));
             }
         }).start();
     }
@@ -103,7 +126,7 @@ public class AppContext {
         dialogoActual = null;
     }
 
-    // ── Selector de área Swing (Windows / Robot fallback) ─
+    // ── Selector de área Swing (Windows) ──────────────────
     private void iniciarCapturaConSelector() {
         try {
             new SelectorDeAreaBridge(this);
@@ -112,7 +135,7 @@ public class AppContext {
         }
     }
 
-    // Llamado desde SelectorDeAreaBridge
+    // Llamado desde SelectorDeAreaBridge / SelectorVentanaBridge
     void mostrarDialogoConArea(Rectangle area) {
         new Thread(() -> {
             try {
@@ -209,10 +232,6 @@ public class AppContext {
     }
 
     // ── Monitor de triggers ───────────────────────────────
-    // Vigila dos archivos cada 300ms:
-    //   TRIGGER_AREA   → captura de área
-    //   TRIGGER_WINDOW → captura de ventana activa
-    // La JVM permanece viva — no se crean nuevas instancias
     private void iniciarMonitorTrigger() {
         Thread monitor = new Thread(() -> {
             while (true) {

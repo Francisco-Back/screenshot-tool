@@ -403,4 +403,38 @@ public class ScreenshotService {
             return imagen;
         }
     }
+
+    public BufferedImage capturarMonitorActivoLinux() throws Exception {
+    // Detectar monitor donde está el cursor
+    Point cursor = MouseInfo.getPointerInfo().getLocation();
+    GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
+
+    Rectangle monitor = null;
+    for (GraphicsDevice gd : ge.getScreenDevices()) {
+        Rectangle bounds = gd.getDefaultConfiguration().getBounds();
+        if (bounds.contains(cursor)) {
+            monitor = bounds;
+            break;
+        }
+    }
+    if (monitor == null) {
+        monitor = ge.getDefaultScreenDevice().getDefaultConfiguration().getBounds();
+    }
+
+    // Capturar pantalla completa
+    Process p = new ProcessBuilder(
+            "gnome-screenshot",
+            "--file=" + TMP_FILE.getAbsolutePath())
+            .redirectErrorStream(true)
+            .start();
+    int exitCode = p.waitFor();
+    if (exitCode != 0 || !TMP_FILE.exists()) return null;
+
+    BufferedImage full = ImageIO.read(TMP_FILE);
+    TMP_FILE.delete();
+
+    // Recortar solo el monitor activo — sin pérdida de resolución
+    return full.getSubimage(monitor.x, monitor.y, monitor.width, monitor.height);
+}
+
 }

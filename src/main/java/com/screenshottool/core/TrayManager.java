@@ -12,17 +12,19 @@ import java.net.URL;
  * TrayManager - Maneja el ícono y menú de la bandeja del sistema.
  *
  * Responsabilidades:
- *   - Cargar o generar el ícono de la bandeja
- *   - Crear el menú contextual (Capturar, Salir)
- *   - Agregar el ícono al SystemTray
+ * - Cargar o generar el ícono de la bandeja
+ * - Crear el menú contextual (Capturar área, Capturar ventana, Salir)
+ * - Agregar el ícono al SystemTray
  */
 public class TrayManager {
 
     private final Runnable onCapturar;
+    private final Runnable onCapturarVentana;
     private TrayIcon trayIcon;
 
-    public TrayManager(Runnable onCapturar) {
-        this.onCapturar = onCapturar;
+    public TrayManager(Runnable onCapturar, Runnable onCapturarVentana) {
+        this.onCapturar        = onCapturar;
+        this.onCapturarVentana = onCapturarVentana;
     }
 
     // ── Inicializar bandeja ───────────────────────────────
@@ -54,6 +56,9 @@ public class TrayManager {
         MenuItem capturar = new MenuItem("Capturar area (Ctrl+Alt+S)");
         capturar.addActionListener(e -> Platform.runLater(onCapturar));
 
+        MenuItem capturarVentana = new MenuItem("Capturar ventana (Ctrl+Alt+W)");
+        capturarVentana.addActionListener(e -> Platform.runLater(onCapturarVentana));
+
         MenuItem salir = new MenuItem("Salir");
         salir.addActionListener(e -> {
             tray.remove(trayIcon);
@@ -62,6 +67,7 @@ public class TrayManager {
         });
 
         menu.add(capturar);
+        menu.add(capturarVentana);
         menu.addSeparator();
         menu.add(salir);
         return menu;
