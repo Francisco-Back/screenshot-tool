@@ -7,16 +7,19 @@
 #    - Proceso activo
 #    - Atajos de GNOME
 #    - Triggers temporales
+#
+#  IMPORTANTE: No usar set -e — si un comando falla el script
+#  debe continuar para no dejar dpkg en estado inconsistente.
 # ═══════════════════════════════════════════════════════════
 
-set -e
+# NO set -e — cada comando maneja su propio error con || true
 
 # ── Detectar usuario actual ───────────────────────────────
 get_current_user() {
     if [ -n "$SUDO_USER" ]; then
         echo "$SUDO_USER"
     else
-        who | grep -E ":[0-9]" | head -1 | awk '{print $1}'
+        who | grep -E ":[0-9]" | head -1 | awk '{print $1}' 2>/dev/null || echo ""
     fi
 }
 
@@ -25,6 +28,7 @@ CURRENT_USER=$(get_current_user)
 # ── Detener proceso si está corriendo ────────────────────
 echo "[postrm] Stopping Screenshot Tool..."
 pkill -f "screenshot-tool" 2>/dev/null || true
+sleep 0.5 2>/dev/null || true
 
 # ── Limpiar triggers temporales ──────────────────────────
 rm -f /tmp/screenshottool.trigger 2>/dev/null || true
@@ -32,28 +36,33 @@ rm -f /tmp/screenshottool.trigger.window 2>/dev/null || true
 
 # ── Remover atajos de GNOME ───────────────────────────────
 if [ -n "$CURRENT_USER" ] && [ "$CURRENT_USER" != "root" ]; then
-    USER_ID=$(id -u "$CURRENT_USER")
-    export DBUS_SESSION_BUS_ADDRESS="unix:path=/run/user/$USER_ID/bus"
+    USER_ID=$(id -u "$CURRENT_USER" 2>/dev/null) || true
 
-    BINDING_BASE="/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings"
-    BINDING_AREA="$BINDING_BASE/screenshot-area/"
-    BINDING_WIN="$BINDING_BASE/screenshot-window/"
+    if [ -n "$USER_ID" ]; then
+        export DBUS_SESSION_BUS_ADDRESS="unix:path=/run/user/$USER_ID/bus"
 
-    CURRENT=$(sudo -u "$CURRENT_USER" DBUS_SESSION_BUS_ADDRESS="$DBUS_SESSION_BUS_ADDRESS" \
-        gsettings get org.gnome.settings-daemon.plugins.media-keys \
-        custom-keybindings 2>/dev/null || echo "@as []")
+        BINDING_BASE="/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings"
+        BINDING_AREA="$BINDING_BASE/screenshot-area/"
+        BINDING_WIN="$BINDING_BASE/screenshot-window/"
 
-    if [[ "$CURRENT" == *"screenshot-area"* ]] || [[ "$CURRENT" == *"screenshot-window"* ]]; then
-        NEW=$(echo "$CURRENT" | \
-            sed "s|'$BINDING_AREA', ||g;s|, '$BINDING_AREA'||g;s|'$BINDING_AREA'||g" | \
-            sed "s|'$BINDING_WIN', ||g;s|, '$BINDING_WIN'||g;s|'$BINDING_WIN'||g" | \
-            sed "s|\[, |\[|g;s|, \]|\]|g")
+        CURRENT=$(sudo -u "$CURRENT_USER" \
+            DBUS_SESSION_BUS_ADDRESS="$DBUS_SESSION_BUS_ADDRESS" \
+            gsettings get org.gnome.settings-daemon.plugins.media-keys \
+            custom-keybindings 2>/dev/null || echo "@as []")
 
-        sudo -u "$CURRENT_USER" DBUS_SESSION_BUS_ADDRESS="$DBUS_SESSION_BUS_ADDRESS" \
-            gsettings set org.gnome.settings-daemon.plugins.media-keys \
-            custom-keybindings "$NEW" 2>/dev/null || true
+        if [[ "$CURRENT" == *"screenshot-area"* ]] || [[ "$CURRENT" == *"screenshot-window"* ]]; then
+            NEW=$(echo "$CURRENT" | \
+                sed "s|'$BINDING_AREA', ||g;s|, '$BINDING_AREA'||g;s|'$BINDING_AREA'||g" | \
+                sed "s|'$BINDING_WIN', ||g;s|, '$BINDING_WIN'||g;s|'$BINDING_WIN'||g" | \
+                sed "s|\[, |\[|g;s|, \]|\]|g") || true
 
-        echo "[postrm] GNOME hotkeys removed"
+            sudo -u "$CURRENT_USER" \
+                DBUS_SESSION_BUS_ADDRESS="$DBUS_SESSION_BUS_ADDRESS" \
+                gsettings set org.gnome.settings-daemon.plugins.media-keys \
+                custom-keybindings "$NEW" 2>/dev/null || true
+
+            echo "[postrm] GNOME hotkeys removed"
+        fi
     fi
 fi
 
