@@ -15,11 +15,12 @@ A lightweight screen capture tool for Linux and Windows built with Java 21 and J
 - **System tray** integration — runs silently in the background
 - **Two global hotkeys:**
   - `Ctrl+Alt+S` → area selection capture
-  - `Ctrl+Alt+W` → active window capture
+  - `Ctrl+Alt+W` → active monitor capture (captures the monitor where the cursor is)
 - **Area selection** with visual overlay, blue border, corner markers and ✕ cancel button
-- **Active window capture** — instantly captures the focused window without manual selection
+- **Active monitor capture** — detects which monitor the cursor is on and captures it instantly
 - **Multi-monitor** support — covers all screens simultaneously with screen labels
 - **Single JVM instance** — trigger file system prevents multiple processes accumulating in memory
+- **Camera shutter sound** on capture (royalty-free, skipped on Linux when gnome-screenshot plays its own)
 - **Native capture backends** with automatic fallback:
   - `gnome-screenshot` → GNOME/Wayland/VirtualBox with Guest Additions
   - `scrot` → X11, works in VirtualBox without Guest Additions
@@ -34,7 +35,8 @@ A lightweight screen capture tool for Linux and Windows built with Java 21 and J
   - Format selector: `png`, `jpg`, `bmp`, `gif`
   - Folder selector (remembers last used, defaults to `~/Pictures`)
   - Toast notification after saving with "Open file" and "Show in folder" buttons (auto-closes in 4s)
-  - Internal keyboard shortcuts: `Ctrl+S` save, `Ctrl+C` copy, `ESC` close, `Delete/F2` clear filename
+  - Small bubble notification when copying to clipboard
+  - Internal keyboard shortcuts: `Ctrl+S` save, `Ctrl+C` copy image, `Ctrl+Alt+S` new area capture, `Ctrl+Alt+W` new monitor capture, `ESC` close, `Delete` clear filename, `F2` toggle filename selection
 - **Dark/light mode** — automatically adapts to system theme (Windows registry, Linux gsettings)
 
 ---
@@ -44,14 +46,16 @@ A lightweight screen capture tool for Linux and Windows built with Java 21 and J
 | Feature | Linux (GNOME) | Windows |
 |---|---|---|
 | Area selector | ✅ | ✅ |
-| Active window capture | ✅ xdotool/scrot | ✅ Robot |
+| Active monitor capture | ✅ cursor position | ✅ overlay selector |
 | Save dialog | ✅ | ✅ |
 | Clipboard | ✅ | ✅ |
 | Dark/light theme | ✅ | ✅ |
 | System tray | ✅ | ✅ |
 | HiDPI capture | ✅ | ✅ |
+| Camera sound | ✅ native (gnome) | ✅ SoundService |
 | `Ctrl+Alt+S` hotkey | ✅ GNOME gsettings | ✅ Start Menu shortcut |
 | `Ctrl+Alt+W` hotkey | ✅ GNOME gsettings | ✅ Start Menu shortcut |
+| `Ctrl+Alt+S/W` in dialog | ✅ | ✅ |
 | `gnome-screenshot` backend | ✅ | ❌ |
 | `scrot` / `xwd` backend | ✅ | ❌ |
 | `Robot` backend | ✅ | ✅ |
@@ -93,7 +97,7 @@ The same approach is used for Windows with `.msi` + WiX Toolset.
 
 ### Linux
 - No requirements — JRE and JavaFX 21 are embedded in the `.deb`
-- `xdotool` for active window capture (optional, fallback to `scrot` if missing)
+- `xdotool` for window detection (optional)
 
 ### Windows
 - No requirements — JRE and JavaFX 21 are embedded in the `.msi`
@@ -185,17 +189,20 @@ installers\windows\build-msi.bat
 - Drag to select the area
 - Press `ESC` or click `✕` to cancel
 
-### Capture active window
+### Capture active monitor
 - Press `Ctrl+Alt+W`
-- The focused window is captured instantly — no selection needed
+- Captures the monitor where your cursor is instantly — no selection needed
 
 ### Save dialog shortcuts
 | Shortcut | Action |
 |---|---|
 | `Ctrl+S` | Save file |
-| `Ctrl+C` | Copy to clipboard |
+| `Ctrl+C` | Copy image to clipboard (if no text selected) |
+| `Ctrl+Alt+S` | New area capture (closes current dialog) |
+| `Ctrl+Alt+W` | New monitor capture (closes current dialog) |
 | `ESC` | Close dialog |
-| `Delete` / `F2` | Clear filename and focus input |
+| `Delete` | Clear filename |
+| `F2` | Toggle filename selection |
 | `Enter` | Save file |
 
 ---
@@ -254,21 +261,25 @@ screenshot-tool/
     │   │   ├── AppContext.java             # Main orchestrator + trigger monitor
     │   │   ├── TrayManager.java            # System tray icon and menu
     │   │   ├── HotkeyManager.java          # Ctrl+Alt+S and Ctrl+Alt+W (Windows)
-    │   │   └── SelectorDeAreaBridge.java   # Swing area selector (Robot fallback)
+    │   │   ├── SelectorDeAreaBridge.java   # Swing area selector (Robot fallback)
+    │   │   └── SelectorVentanaBridge.java  # Swing monitor selector (Windows)
     │   ├── controller/
     │   │   ├── ScreenshotController.java   # Save dialog controller
     │   │   └── FolderPickerController.java # Folder picker controller
     │   ├── service/
     │   │   ├── ScreenshotService.java      # Capture backends, clipboard, save
-    │   │   └── ToastService.java           # Fluent Design toast notification
+    │   │   ├── ToastService.java           # Fluent Design toast notification
+    │   │   └── SoundService.java           # Camera shutter sound synthesizer
     │   └── model/
     │       └── CapturaModel.java           # Data model with JavaFX properties
     └── resources/com/screenshottool/
         ├── fxml/
         │   ├── main.fxml                   # Save dialog UI
         │   └── folder-picker.fxml          # Folder picker UI
-        └── css/
-            └── style.css                   # Adaptive theme styles
+        ├── css/
+        │   └── style.css                   # Adaptive theme styles
+        └── sounds/
+            └── capture.wav                 # Camera shutter sound (royalty-free)
 ```
 
 ---
@@ -284,7 +295,7 @@ Ctrl+Alt+S (2nd press)  → app running → touch /tmp/screenshottool.trigger
                         → AppContext detects within 300ms → area capture
 
 Ctrl+Alt+W              → touch /tmp/screenshottool.trigger.window
-                        → AppContext detects within 300ms → window capture
+                        → AppContext detects within 300ms → monitor capture
 ```
 
 **Windows:**
