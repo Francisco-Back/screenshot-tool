@@ -271,21 +271,27 @@ public class ScreenshotController implements Initializable {
                 }
             });
 
-            // Delete → limpiar nombre completo
+            // F2 → toggle selección del nombre
             scene.addEventFilter(javafx.scene.input.KeyEvent.KEY_PRESSED, e -> {
-                if (e.getCode() == javafx.scene.input.KeyCode.DELETE
-                        && !txtNombre.isFocused()) {
-                    txtNombre.clear();
-                    txtNombre.requestFocus();
+                if (e.getCode() == javafx.scene.input.KeyCode.F2) {
+                    if (txtNombre.isFocused() && !txtNombre.getSelectedText().isEmpty()) {
+                        // Ya tiene texto seleccionado → deseleccionar y quitar foco
+                        txtNombre.deselect();
+                        rootPane.requestFocus();
+                    } else {
+                        // No tiene foco o no hay selección → seleccionar todo
+                        txtNombre.requestFocus();
+                        txtNombre.selectAll();
+                    }
                     e.consume();
                 }
             });
 
-            // F2 → poner foco en nombre para editar
+            // Delete → limpiar nombre siempre
             scene.addEventFilter(javafx.scene.input.KeyEvent.KEY_PRESSED, e -> {
-                if (e.getCode() == javafx.scene.input.KeyCode.F2) {
+                if (e.getCode() == javafx.scene.input.KeyCode.DELETE) {
+                    txtNombre.clear();
                     txtNombre.requestFocus();
-                    txtNombre.selectAll();
                     e.consume();
                 }
             });
