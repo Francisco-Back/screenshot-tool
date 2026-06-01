@@ -61,7 +61,6 @@ public class AppContext {
     // Linux: gnome-screenshot con selector nativo
     // Windows: SelectorDeAreaBridge con overlay Swing
     public void iniciarCaptura() {
-        System.out.println("[AppContext] iniciarCaptura() - área");
         cerrarDialogoActual();
 
         new Thread(() -> {
@@ -84,7 +83,6 @@ public class AppContext {
     // Linux: detecta monitor donde está el cursor y captura con scrot/import
     // Windows: SelectorVentanaBridge con overlay Swing
     public void iniciarCapturaVentana() {
-        System.out.println("[AppContext] iniciarCapturaVentana() - monitor activo");
         cerrarDialogoActual();
 
         new Thread(() -> {
@@ -183,7 +181,7 @@ public class AppContext {
         if (dialogoCargando) return;
         dialogoCargando = true;
         try {
-            servicio.copiarAlPortapapeles(imagenAWT);
+           // servicio.copiarAlPortapapeles(imagenAWT);
 
             CapturaModel modelo = new CapturaModel();
             modelo.setImagen(SwingFXUtils.toFXImage(imagenAWT, null));

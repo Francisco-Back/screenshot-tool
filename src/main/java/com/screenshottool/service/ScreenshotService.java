@@ -41,8 +41,6 @@ public class ScreenshotService {
 
     public ScreenshotService() {
         this.backendActivo = detectarBackend();
-        System.out.println("[ScreenshotService] Backend activo: " + backendActivo);
-
         // Advertencia si estamos en VirtualBox y no hay backend nativo
         if (backendActivo == Backend.ROBOT && enVirtualBox()) {
             System.err.println("[ADVERTENCIA] VirtualBox detectado con backend Robot.");

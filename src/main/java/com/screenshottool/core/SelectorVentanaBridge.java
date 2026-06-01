@@ -27,7 +27,6 @@ class SelectorVentanaBridge extends JFrame {
     private final GraphicsDevice[] pantallas;
 
     SelectorVentanaBridge(AppContext app, BufferedImage fondoPantalla, Rectangle boundsTotal) throws Exception {
-        System.out.println("[DEBUG] Constructor SelectorVentanaBridge iniciando...");
         this.app           = app;
         this.fondoPantalla = fondoPantalla;
         this.boundsTotal   = boundsTotal;
@@ -155,7 +154,6 @@ class SelectorVentanaBridge extends JFrame {
         // ── Mostrar ───────────────────────────────────────────
         setFocusableWindowState(true);
         setVisible(true);
-        System.out.println("[DEBUG] SelectorVentanaBridge visible");
         SwingUtilities.invokeLater(() -> panel.requestFocusInWindow());
     }
 

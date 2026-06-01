@@ -43,7 +43,7 @@ public class TrayManager {
             trayIcon.addActionListener(e -> Platform.runLater(onCapturar));
             tray.add(trayIcon);
 
-            System.out.println("[Screenshot Tool] Activo. Ctrl+Alt+S para capturar.");
+            //System.out.println("[Screenshot Tool] Activo. Ctrl+Alt+S para capturar.");
         } catch (AWTException e) {
             System.err.println("[TrayManager] No se pudo agregar a la bandeja: " + e.getMessage());
         }
