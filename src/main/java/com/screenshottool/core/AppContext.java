@@ -21,7 +21,7 @@ import java.io.File;
  * AppContext - Orquesta el flujo principal de la aplicación.
  *
  * Triggers:
- * /tmp/screenshottool.trigger        → captura de área (selector)
+ * /tmp/screenshottool.trigger → captura de área (selector)
  * /tmp/screenshottool.trigger.window → captura de monitor activo
  *
  * Ciclo de vida:
@@ -37,12 +37,12 @@ public class AppContext {
     private Stage dialogoActual = null;
     private boolean dialogoCargando = false;
 
-    private static final File TRIGGER_AREA   = new File("/tmp/screenshottool.trigger");
+    private static final File TRIGGER_AREA = new File("/tmp/screenshottool.trigger");
     private static final File TRIGGER_WINDOW = new File("/tmp/screenshottool.trigger.window");
 
     public AppContext() {
-        this.servicio      = new ScreenshotService();
-        this.trayManager   = new TrayManager(this::iniciarCaptura, this::iniciarCapturaVentana);
+        this.servicio = new ScreenshotService();
+        this.trayManager = new TrayManager(this::iniciarCaptura, this::iniciarCapturaVentana);
         this.hotkeyManager = new HotkeyManager(this::iniciarCaptura, this::iniciarCapturaVentana);
     }
 
@@ -68,7 +68,8 @@ public class AppContext {
                 String os = System.getProperty("os.name").toLowerCase();
                 if (os.contains("linux")) {
                     BufferedImage imagen = servicio.capturarConGnomeSelector();
-                    if (imagen == null) return;
+                    if (imagen == null)
+                        return;
                     Platform.runLater(() -> mostrarDialogo(imagen));
                 } else {
                     Platform.runLater(this::iniciarCapturaConSelector);
@@ -90,7 +91,8 @@ public class AppContext {
                 String os = System.getProperty("os.name").toLowerCase();
                 if (os.contains("linux")) {
                     BufferedImage imagen = servicio.capturarMonitorActivoLinux();
-                    if (imagen == null) return;
+                    if (imagen == null)
+                        return;
                     Platform.runLater(() -> mostrarDialogo(imagen));
                 } else {
                     // Windows: selector visual con overlay
@@ -138,7 +140,8 @@ public class AppContext {
         new Thread(() -> {
             try {
                 BufferedImage imagen = servicio.capturarAreaConBackend(area);
-                if (imagen == null) return;
+                if (imagen == null)
+                    return;
                 if (servicio.imagenPareceBlancoNegro(imagen)) {
                     System.err.println("[ADVERTENCIA] Captura en negro.");
                 }
@@ -158,16 +161,17 @@ public class AppContext {
         stage.initStyle(StageStyle.DECORATED);
 
         try {
-            for (String path : new String[]{
+            for (String path : new String[] {
                     "/com/screenshottool/img/icon-128.png",
                     "/com/screenshottool/img/icon-48.png",
                     "/com/screenshottool/img/icon-32.png",
-                    "/com/screenshottool/img/icon-16.png"}) {
+                    "/com/screenshottool/img/icon-16.png" }) {
                 URL iconUrl = getClass().getResource(path);
                 if (iconUrl != null)
                     stage.getIcons().add(new javafx.scene.image.Image(iconUrl.toExternalForm()));
             }
-        } catch (Exception ignored) {}
+        } catch (Exception ignored) {
+        }
 
         return stage;
     }
@@ -178,10 +182,11 @@ public class AppContext {
     }
 
     private void mostrarDialogo(BufferedImage imagenAWT, Stage stageExistente) {
-        if (dialogoCargando) return;
+        if (dialogoCargando)
+            return;
         dialogoCargando = true;
         try {
-           // servicio.copiarAlPortapapeles(imagenAWT);
+            // servicio.copiarAlPortapapeles(imagenAWT);
 
             CapturaModel modelo = new CapturaModel();
             modelo.setImagen(SwingFXUtils.toFXImage(imagenAWT, null));
@@ -206,7 +211,10 @@ public class AppContext {
             }
             stage.setScene(scene);
 
-            controller.init(modelo, servicio, imagenAWT, stage, this::iniciarCaptura);
+            controller.init(modelo, servicio, imagenAWT, stage,
+                    this::iniciarCaptura, // onNuevaCapturaArea
+                    this::iniciarCapturaVentana // onNuevaCapturaVentana
+            );
 
             dialogoCargando = false;
             dialogoActual = stage;
@@ -242,7 +250,8 @@ public class AppContext {
                         Platform.runLater(this::iniciarCaptura);
                     }
                     Thread.sleep(300);
-                } catch (InterruptedException ignored) {}
+                } catch (InterruptedException ignored) {
+                }
             }
         });
         monitor.setDaemon(true);
@@ -269,18 +278,20 @@ public class AppContext {
                         "org.gnome.desktop.interface", "color-scheme");
                 Process p = pb.start();
                 String output = new String(p.getInputStream().readAllBytes()).trim();
-                if (output.contains("prefer-dark")) return true;
+                if (output.contains("prefer-dark"))
+                    return true;
                 String gtkTheme = System.getenv("GTK_THEME");
-                if (gtkTheme != null && gtkTheme.toLowerCase().contains("dark")) return true;
+                if (gtkTheme != null && gtkTheme.toLowerCase().contains("dark"))
+                    return true;
             }
-        } catch (Exception ignored) {}
+        } catch (Exception ignored) {
+        }
         return false;
     }
 
     // ── Mostrar error ─────────────────────────────────────
     private void mostrarError(String mensaje) {
-        javafx.scene.control.Alert alert =
-            new javafx.scene.control.Alert(javafx.scene.control.Alert.AlertType.ERROR);
+        javafx.scene.control.Alert alert = new javafx.scene.control.Alert(javafx.scene.control.Alert.AlertType.ERROR);
         alert.setTitle("Screenshot Tool");
         alert.setHeaderText(null);
         alert.setContentText(mensaje);

@@ -100,13 +100,18 @@ public class ScreenshotService {
 
     // ── Capturar área con el backend activo ───────────────
     public BufferedImage capturarAreaConBackend(Rectangle area) throws Exception {
-        return switch (backendActivo) {
+        BufferedImage img = switch (backendActivo) {
             case GNOME_SCREENSHOT -> capturarAreaConGnome(area);
             case SCROT -> capturarAreaConScrot(area);
             case XWD -> capturarAreaConXwd(area);
             case IMPORT_IMAGEMAGICK -> capturarAreaConImport(area);
             case ROBOT -> capturarAreaConRobot(area);
         };
+        // Sonido solo si no es gnome-screenshot (que ya tiene sonido nativo)
+        if (backendActivo != Backend.GNOME_SCREENSHOT) {
+            SoundService.reproducirCaptura();
+        }
+        return img;
     }
 
     // ── Backend 1: gnome-screenshot con coordenadas ───────
@@ -403,36 +408,38 @@ public class ScreenshotService {
     }
 
     public BufferedImage capturarMonitorActivoLinux() throws Exception {
-    // Detectar monitor donde está el cursor
-    Point cursor = MouseInfo.getPointerInfo().getLocation();
-    GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
+        // Detectar monitor donde está el cursor
+        Point cursor = MouseInfo.getPointerInfo().getLocation();
+        GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
 
-    Rectangle monitor = null;
-    for (GraphicsDevice gd : ge.getScreenDevices()) {
-        Rectangle bounds = gd.getDefaultConfiguration().getBounds();
-        if (bounds.contains(cursor)) {
-            monitor = bounds;
-            break;
+        Rectangle monitor = null;
+        for (GraphicsDevice gd : ge.getScreenDevices()) {
+            Rectangle bounds = gd.getDefaultConfiguration().getBounds();
+            if (bounds.contains(cursor)) {
+                monitor = bounds;
+                break;
+            }
         }
+        if (monitor == null) {
+            monitor = ge.getDefaultScreenDevice().getDefaultConfiguration().getBounds();
+        }
+
+        // Capturar pantalla completa
+        Process p = new ProcessBuilder(
+                "gnome-screenshot",
+                "--file=" + TMP_FILE.getAbsolutePath())
+                .redirectErrorStream(true)
+                .start();
+        int exitCode = p.waitFor();
+        if (exitCode != 0 || !TMP_FILE.exists())
+            return null;
+
+        BufferedImage full = ImageIO.read(TMP_FILE);
+        TMP_FILE.delete();
+
+        // Recortar solo el monitor activo — sin pérdida de resolución
+        // Linux con gnome-screenshot ya tiene sonido nativo — no agregar
+        return full.getSubimage(monitor.x, monitor.y, monitor.width, monitor.height);
     }
-    if (monitor == null) {
-        monitor = ge.getDefaultScreenDevice().getDefaultConfiguration().getBounds();
-    }
-
-    // Capturar pantalla completa
-    Process p = new ProcessBuilder(
-            "gnome-screenshot",
-            "--file=" + TMP_FILE.getAbsolutePath())
-            .redirectErrorStream(true)
-            .start();
-    int exitCode = p.waitFor();
-    if (exitCode != 0 || !TMP_FILE.exists()) return null;
-
-    BufferedImage full = ImageIO.read(TMP_FILE);
-    TMP_FILE.delete();
-
-    // Recortar solo el monitor activo — sin pérdida de resolución
-    return full.getSubimage(monitor.x, monitor.y, monitor.width, monitor.height);
-}
 
 }

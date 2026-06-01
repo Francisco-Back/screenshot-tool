@@ -62,7 +62,6 @@ public class ScreenshotController implements Initializable {
     private ScreenshotService servicio;
     private BufferedImage imagenOriginal;
     private Stage stage;
-    // private Runnable onCancelar;
     private ToastService toastService; // ← delegado para el toast
 
     // ── Initializable ─────────────────────────────────────────
@@ -78,15 +77,21 @@ public class ScreenshotController implements Initializable {
     }
 
     // ── Inyección desde ScreenshotApp ─────────────────────────
+    // ── Callbacks ─────────────────────────────────────────────
+    private Runnable onNuevaCapturaArea;
+    private Runnable onNuevaCapturaVentana;
+
+    // ── Inyección desde AppContext ────────────────────────────
     public void init(CapturaModel modelo, ScreenshotService servicio,
-            BufferedImage imagenOriginal, Stage stage, Runnable onCancelar) {
+            BufferedImage imagenOriginal, Stage stage,
+            Runnable onNuevaCapturaArea, Runnable onNuevaCapturaVentana) {
         this.modelo = modelo;
         this.servicio = servicio;
         this.imagenOriginal = imagenOriginal;
         this.stage = stage;
-        // this.onCancelar = onCancelar;
+        this.onNuevaCapturaArea = onNuevaCapturaArea;
+        this.onNuevaCapturaVentana = onNuevaCapturaVentana;
 
-        // ToastService se crea aquí, cuando ya tenemos rootPane + stage + servicio
         this.toastService = new ToastService(rootPane, stage, servicio);
 
         bindUI();
@@ -254,8 +259,12 @@ public class ScreenshotController implements Initializable {
             // Ctrl+Alt+S → nueva captura de área
             scene.getAccelerators().put(
                     javafx.scene.input.KeyCombination.keyCombination("Ctrl+Alt+S"),
-                    () -> stage.fireEvent(new javafx.stage.WindowEvent(
-                            stage, javafx.stage.WindowEvent.WINDOW_CLOSE_REQUEST)));
+                    onNuevaCapturaArea::run);
+
+            // Ctrl+Alt+W → nueva captura de monitor
+            scene.getAccelerators().put(
+                    javafx.scene.input.KeyCombination.keyCombination("Ctrl+Alt+W"),
+                    onNuevaCapturaVentana::run);
             // Ctrl+S → guardar
             scene.getAccelerators().put(
                     javafx.scene.input.KeyCombination.keyCombination("Ctrl+S"),
