@@ -255,7 +255,7 @@ public class ScreenshotService {
         Files.createDirectories(archivo.getParentFile().toPath());
 
         BufferedImage imgAGuardar = imagen;
-        if ("jpg".equals(formato)) {
+        if ("jpg".equals(formato) || "bmp".equals(formato)) { 
             imgAGuardar = new BufferedImage(
                     imagen.getWidth(), imagen.getHeight(), BufferedImage.TYPE_INT_RGB);
             Graphics2D g2 = imgAGuardar.createGraphics();
@@ -265,7 +265,16 @@ public class ScreenshotService {
             g2.dispose();
         }
 
-        boolean ok = ImageIO.write(imgAGuardar, formato, archivo);
+        // Normalizar formato — ImageIO es sensible a mayúsculas en algunos sistemas
+        String formatoIO = formato.toUpperCase();
+        if (formatoIO.equals("JPG"))
+            formatoIO = "JPEG"; // JPG → JPEG para ImageIO
+
+        boolean ok = ImageIO.write(imgAGuardar, formatoIO, archivo);
+        if (!ok) {
+            // Fallback: intentar en minúsculas
+            ok = ImageIO.write(imgAGuardar, formato.toLowerCase(), archivo);
+        }
         if (!ok)
             throw new IOException("Formato '" + formato + "' no soportado.");
         return archivo;

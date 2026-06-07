@@ -6,6 +6,8 @@ import java.io.File;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
+import com.screenshottool.service.ConfigService;
+
 /**
  * Modelo que representa una captura de pantalla.
  * Usa propiedades JavaFX para binding directo con el FXML.
@@ -23,10 +25,19 @@ public class CapturaModel {
     private final ObjectProperty<File> carpetaDestino = new SimpleObjectProperty<>(obtenerCarpetaImagenes());
 
     // ── Formatos soportados ───────────────────────────────
-    public static final String[] FORMATOS = { "png", "jpg", "bmp", "gif" };
+    public static final String[] FORMATOS = { "png", "jpg", "bmp", "gif", "tiff" };
 
     public CapturaModel() {
         nombre.set(generarNombreDefault());
+
+        // Cargar preferencias guardadas
+        java.io.File carpetaGuardada = ConfigService.getCarpetaDestino();
+        if (carpetaGuardada != null) {
+            carpetaDestino.set(carpetaGuardada);
+        }
+
+        String formatoGuardado = ConfigService.getFormato();
+        formato.set(formatoGuardado);
     }
 
     // ── Nombre por defecto con fecha/hora ─────────────────
@@ -52,16 +63,18 @@ public class CapturaModel {
         }
         return new File(carpetaDestino.get(), n + "." + formato.get());
     }
+
     private static File obtenerCarpetaImagenes() {
-    // Intenta carpeta Imágenes estándar en Windows y Linux
-    String home = System.getProperty("user.home");
-    String[] posibles = {"Pictures", "Imágenes", "Imagenes", "Images"};
-    for (String nombre : posibles) {
-        File carpeta = new File(home, nombre);
-        if (carpeta.exists() && carpeta.isDirectory()) return carpeta;
+        // Intenta carpeta Imágenes estándar en Windows y Linux
+        String home = System.getProperty("user.home");
+        String[] posibles = { "Pictures", "Imágenes", "Imagenes", "Images" };
+        for (String nombre : posibles) {
+            File carpeta = new File(home, nombre);
+            if (carpeta.exists() && carpeta.isDirectory())
+                return carpeta;
+        }
+        return new File(home); // fallback: home
     }
-    return new File(home); // fallback: home
-}
 
     // ── Getters / Setters ─────────────────────────────────
     public Image getImagen() {

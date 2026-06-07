@@ -1,6 +1,7 @@
 package com.screenshottool.controller;
 
 import com.screenshottool.model.CapturaModel;
+import com.screenshottool.service.ConfigService;
 import com.screenshottool.service.ScreenshotService;
 import com.screenshottool.service.ToastService;
 
@@ -21,6 +22,7 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ResourceBundle;
+
 
 /**
  * ScreenshotController — diálogo principal (main.fxml)
@@ -115,6 +117,17 @@ public class ScreenshotController implements Initializable {
         actualizarLblCarpeta();
         modelo.carpetaDestinoProperty().addListener(
                 (obs, old, nueva) -> actualizarLblCarpeta());
+
+        // Guardar carpeta cuando cambia
+        modelo.carpetaDestinoProperty().addListener((obs, old, nueva) -> {
+            actualizarLblCarpeta();
+            ConfigService.guardarCarpeta(nueva);
+        });
+
+        // Guardar formato cuando cambia
+        modelo.formatoProperty().addListener((obs, old, nuevo) -> {
+            ConfigService.guardarFormato(nuevo);
+        });
 
         Platform.runLater(() -> {
             txtNombre.requestFocus();
