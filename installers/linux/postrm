@@ -3,16 +3,13 @@
 #  Screenshot Tool - Post-removal script
 #  Ejecutado automáticamente por dpkg al desinstalar el .deb
 #
-#  Limpia:
-#    - Proceso activo
-#    - Atajos de GNOME
-#    - Triggers temporales
-#
 #  IMPORTANTE: No usar set -e — si un comando falla el script
 #  debe continuar para no dejar dpkg en estado inconsistente.
+#  trap ERR garantiza que cualquier error sea ignorado.
 # ═══════════════════════════════════════════════════════════
 
-# NO set -e — cada comando maneja su propio error con || true
+# Capturar cualquier error y continuar — nunca fallar
+trap 'true' ERR
 
 # ── Detectar usuario actual ───────────────────────────────
 get_current_user() {
@@ -33,6 +30,12 @@ sleep 0.5 2>/dev/null || true
 # ── Limpiar triggers temporales ──────────────────────────
 rm -f /tmp/screenshottool.trigger 2>/dev/null || true
 rm -f /tmp/screenshottool.trigger.window 2>/dev/null || true
+
+# ── Eliminar .desktop de GNOME ───────────────────────────
+rm -f /usr/share/applications/screenshot-tool.desktop 2>/dev/null || true
+rm -f /usr/share/applications/screenshot-tool-screenshot-tool.desktop 2>/dev/null || true
+update-desktop-database /usr/share/applications 2>/dev/null || true
+echo "[postrm] .desktop removed from GNOME"
 
 # ── Remover atajos de GNOME ───────────────────────────────
 if [ -n "$CURRENT_USER" ] && [ "$CURRENT_USER" != "root" ]; then
